@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<link rel="icon" href="img/timg.jpg">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>柱状3D图</title>
+		<script type="text/javascript" src="js/jquery.min.js"></script>
+		<script type="text/javascript" src="js/highcharts.js"></script>
+		<script type="text/javascript" src="js/highcharts-them.js"></script>
+		<script type="text/javascript" src="js/highcharts-3D.js"></script>
+		<script type="text/javascript" src="js/exporting.js"></script>
+		<script type="text/javascript" src="js/highcharts-zh_CN.js"></script>
+		<script>
+			var token = window.localStorage.getItem("token"); //取出暂存的token数据
+			var a, b, c, d, e, f, g, h, i, j, k, l;
+
+			var as, bs, cs, ds, es, fs, gs, hs, is, js, ks, ls;
+			
+			var utotal;
+			$(function() {
+				$.post("http://localhost:8080/SSMCyj/signin/getSignInByTime.php", {
+					token: token
+				}, function(res) {
+					if(res.success) {
+						a = res.message.one;
+						b = res.message.two;
+						c = res.message.three;
+						d = res.message.four;
+						e = res.message.five;
+						f = res.message.six;
+						g = res.message.sev;
+						h = res.message.eight;
+						i = res.message.nine;
+						j = res.message.ten;
+						k = res.message.syi;
+						l = res.message.ser;
+
+						as = res.message.ones;
+						bs = res.message.twos;
+						cs = res.message.threes;
+						ds = res.message.fours;
+						es = res.message.fives;
+						fs = res.message.sixs;
+						gs = res.message.sevs;
+						hs = res.message.eights;
+						is = res.message.nines;
+						js = res.message.tens;
+						ks = res.message.syis;
+						ls = res.message.sers;
+						
+						utotal=res.message.utotal;
+						// JS 代码 
+						var chart = new Highcharts.Chart({
+							chart: {
+								renderTo: 'container',
+								/*type: 'line',//可以为line,spline, scatter, splinearea bar,pie,area,column    */
+								type: 'spline',
+								options3d: {
+									enabled: true,
+									alpha: 0,
+									beta: 25,
+									depth: 30,
+									viewDistance: 100,
+									frame: { // Frame框架，3D图包含柱的面板，我们以X ,Y，Z的坐标系来理解，X轴与 Z轴所形成
+										// 的面为bottom，Y轴与Z轴所形成的面为side，X轴与Y轴所形成的面为back，bottom、
+										// side、back的属性一样，其中size为感官理解的厚度，color为面板颜色
+										bottom: {
+											size: 10
+										},
+										side: {
+											size: 1,
+											color: 'transparent'
+										},
+										back: {
+											size: 1,
+											color: 'transparent'
+										}
+									}
+								}
+							},
+							title: {
+								text: '员工签到状况柱状图'
+							},
+							xAxis: {
+								categories: Highcharts.getOptions().lang.shortMonths
+							},
+							yAxis: {
+								title: {
+									text: "员工总数:"+ utotal +"(个)"
+								}
+							},
+							subtitle: {
+								text: '可通过滑动下方滑块改变图表'
+							},
+							plotOptions: {
+								column: {
+									depth: 25
+								}
+							},
+							series: [{
+									name: '员工签到总数', //https://www.hcharts.cn/demo/highcharts/line-labels/grid-light
+									data: [a, b, c, d, e, f, g, h, i, j, k, l]
+								},
+								{
+									name: '员工签退总数',
+									data: [as, bs, cs, ds, es, fs, gs, hs, is, js, ks, ls]
+								}
+							]
+						});
+
+						// 将当前角度信息同步到 DOM 中
+						var alphaValue = document.getElementById('alpha-value'),
+							betaValue = document.getElementById('beta-value'),
+							depthValue = document.getElementById('depth-value');
+
+						function showValues() {
+							alphaValue.innerHTML = chart.options.chart.options3d.alpha;
+							betaValue.innerHTML = chart.options.chart.options3d.beta;
+							depthValue.innerHTML = chart.options.chart.options3d.depth;
+						}
+						// 监听 sliders 的变化并更新图表
+						$('#sliders input').on('input change', function() {
+							chart.options.chart.options3d[this.id] = this.value;
+							showValues();
+							chart.redraw(false);
+						});
+						showValues();
+					}
+				}, "json");
+
+			});
+		</script>
+	</head>
+
+	<body style="background: url(img/xingk2.jpg) no-repeat; background-size: 100% 710px">
+		<div id="container"></div>
+		<div id="sliders">
+			<table>
+				<tr>
+					<td>α 角（内旋转角）</td>
+					<td><input id="alpha" type="range" min="0" max="45" value="15" /> <span id="alpha-value" class="value"></span></td>
+				</tr>
+				<tr>
+					<td>β 角（外旋转角）</td>
+					<td><input id="beta" type="range" min="-45" max="45" value="15" /> <span id="beta-value" class="value"></span></td>
+				</tr>
+				<tr>
+					<td>深度</td>
+					<td><input id="depth" type="range" min="20" max="100" value="50" /> <span id="depth-value" class="value"></span></td>
+				</tr>
+			</table>
+		</div>
+	</body>
+
+</html>

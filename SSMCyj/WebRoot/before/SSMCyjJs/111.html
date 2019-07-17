@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+
+		<script type="text/javascript">
+			function formatDate(date) { //设置时间转换格式
+				var y = date.getFullYear(); //获取年
+				var m = date.getMonth() + 1; //获取月
+				var d = date.getDate(); //获取日
+				var h = date.getHours();
+				var mi = date.getMinutes();
+				var s = date.getSeconds();
+				return y + '-' + m + '-' + d + ' ' + h + ':' + mi + ':' + s; //返回时间格式
+				
+				/*onLoadSuccess（data）{
+
+if(data.total==0)
+alert("没有数据！");
+} */
+			}
+		</script>
+		
+		<script type="text/javascript">
+			function GetDateDiff(startTime, endTime, diffType) {
+				//将xxxx-xx-xx的时间格式，转换为 xxxx/xx/xx的格式
+				startTime = startTime.replace(/\-/g, "/");
+				endTime = endTime.replace(/\-/g, "/");
+				//将计算间隔类性字符转换为小写
+				diffType = diffType.toLowerCase();
+				var sTime = new Date(startTime); //开始时间
+				var eTime = new Date(endTime); //结束时间
+				//作为除数的数字
+				var divNum = 1;
+				switch(diffType) {
+					case "second":
+						divNum = 1000;
+						break;
+					case "minute":
+						divNum = 1000 * 60;
+						break;
+					case "hour":
+						divNum = 1000 * 3600;
+						break;
+					case "day":
+						divNum = 1000 * 3600 * 24;
+						break;
+					default:
+						break;
+				}
+				return parseInt((eTime.getTime() - sTime.getTime()) / parseInt(divNum));
+			}
+		</script>
+
+		<script type="text/javascript">
+			var d1, d2;
+
+			function qiandao() {
+				var time1 = new Date(); //获取时间
+				d1 = formatDate(time1);
+				alert(d1);
+			}
+
+			function qiantui() {
+				var time2 = new Date(); //获取时间
+				d2 = formatDate(time2);
+				alert(d2);
+				var timecha = GetDateDiff(d1, d2, "second");
+				alert(timecha);
+				if(timecha < 10) {
+					alert("不可签退");
+				} else {
+					alert("签退成功");
+				}
+			}
+		</script>
+	</head>
+
+	<body>
+		<input id="btn1" type="button" onclick="qiandao()" value="签到" />
+		<input id="btn2" type="button" onclick="qiantui()" value="签退" />
+	</body>
+
+</html>

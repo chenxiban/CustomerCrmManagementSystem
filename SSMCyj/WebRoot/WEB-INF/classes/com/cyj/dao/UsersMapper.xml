@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cyj.dao.UsersDao">
+
+	<select id="getUsersList" parameterType="list" resultMap="Allusers">
+		SELECT
+		id,loginName
+		FROM users WHERE id NOT IN
+		<foreach collection="ids" item="item" index="index" separator=","
+			close=")" open="(">
+			#{item}
+		</foreach>
+	</select>
+
+	<select id="getUsersLists" resultType="users">
+		SELECT
+		u.id,u.loginName
+		FROM users u
+	</select>
+
+	<select id="getUsers" parameterType="com.cyj.entity.Users"
+		resultMap="Allusers">
+		SELECT
+		u.id,u.loginName,u.passwords,u.isLookout,u.lastLoginTime,u.createTime,u.psdWrongTime,
+		u.lockTime,u.protectEMail,u.protectMTel
+		FROM users u
+		<where>
+			<if test=" loginName != null and loginName !='' ">loginName LIKE "%"#{loginName}"%"</if>
+			<if test=" isLookout != null and isLookout !='' ">AND isLookout LIKE "%"#{isLookout}"%"</if>
+			<if
+				test=" birthStart != null and birthStart != '' and birthEnd != null and birthEnd != '' ">
+				AND createTime BETWEEN #{birthStart} AND #{birthEnd}
+			</if>
+			<if test=" protectEMail != null and protectEMail != '' ">AND protectEMail LIKE "%"#{protectEMail}"%"</if>
+			<if test=" protectMTel != null and protectMTel != '' ">AND protectMTel LIKE "%"#{protectMTel}"%"</if>
+		</where>
+		LIMIT #{startIndex},#{rows}
+	</select>
+
+	<select id="getUserCount" parameterType="com.cyj.entity.Users"
+		resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM users
+		<where>
+			<if test=" loginName != null and loginName !='' ">loginName LIKE "%"#{loginName}"%"</if>
+			<if test=" isLookout != null and isLookout !='' ">AND isLookout LIKE "%"#{isLookout}"%"</if>
+			<if
+				test=" birthStart != null and birthStart != '' and birthEnd != null and birthEnd != '' ">
+				AND createTime BETWEEN #{birthStart} AND #{birthEnd}
+			</if>
+			<if test=" protectEMail != null and protectEMail != '' ">AND protectEMail LIKE "%"#{protectEMail}"%"</if>
+			<if test=" protectMTel != null and protectMTel != '' ">AND protectMTel LIKE "%"#{protectMTel}"%"</if>
+		</where>
+	</select>
+
+	<select id="queryPermissionValueByUserId" resultType="string"
+		parameterType="int">
+		SELECT permissionValue FROM permission WHERE
+		permissionId IN(SELECT permissionId FROM rolepermission WHERE roleId
+		IN(SELECT roleId FROM userroles WHERE userId = #{userId}))
+	</select>
+
+	<select id="getUser" parameterType="java.lang.String" resultType="users">
+		SELECT * FROM users WHERE
+		loginName=#{loginName}
+	</select>
+
+	<select id="loginUser" resultType="users">
+		SELECT * FROM users WHERE
+		(passwords=#{passwords} AND loginName=#{loginName})
+	</select>
+	
+	<select id="getUserById" parameterType="java.lang.Integer" resultType="users">
+		SELECT * FROM users WHERE
+		id=#{id}
+	</select>
+
+	<insert id="addUsers" parameterType="users" useGeneratedKeys="true"
+		keyColumn="id">
+		INSERT INTO users
+		(loginName,passwords,createTime,psdWrongTime,protectEMail,protectMTel)
+		VALUES
+		(#{loginName},#{passwords},#{createTime},#{psdWrongTime},#{protectEMail},#{protectMTel})
+	</insert>
+
+	<update id="updUsers" parameterType="users">
+		UPDATE users
+		<trim suffix="" suffixOverrides="," prefix="SET" prefixOverrides="">
+			<if test="loginName !=null and loginName !=''">
+				loginName=#{loginName},
+			</if>
+			<if test="passwords !=null and passwords !=''">
+				passwords=#{passwords},
+			</if>
+			<if test="isLookout !=null and isLookout !=''">
+				isLookout=#{isLookout},
+			</if>
+			<if test="lastLoginTime !=null">
+				lastLoginTime=#{lastLoginTime},
+			</if>
+			<if test="psdWrongTime >-1 ">
+				psdWrongTime=#{psdWrongTime},
+			</if>
+			<if test="lockTime !=null">
+				lockTime=#{lockTime},
+			</if>
+			<if test="protectEMail !=null and protectEMail !=''">
+				protectEMail=#{protectEMail},
+			</if>
+			<if test="protectMTel !=null and protectMTel !=''">
+				protectMTel=#{protectMTel},
+			</if>
+			<if test="leaveState !=null and leaveState !=''">
+				leaveState=#{leaveState},
+			</if>
+			<if test="leaveBoolean !=null and leaveBoolean !=''">
+				leaveBoolean=#{leaveBoolean},
+			</if>
+		</trim>
+
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="id != 0">
+				and id=#{id}
+			</if>
+		</trim>
+
+	</update>
+
+	<delete id="delUsers" parameterType="String">
+		DELETE FROM users
+		WHERE id IN
+		<foreach collection="list" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+	<resultMap type="users" id="Allusers">
+		<id property="id" column="id" />
+		<result property="loginName" column="loginName" />
+		<result property="passwords" column="passwords" />
+		<result property="isLookout" column="isLookout" />
+		<result property="lastLoginTime" column="lastLoginTime" />
+		<result property="createTime" column="createTime" />
+		<result property="psdWrongTime" column="psdWrongTime" />
+		<result property="lockTime" column="lockTime" />
+		<result property="protectEMail" column="protectEMail" />
+		<result property="protectMTel" column="protectMTel" />
+		<result property="leaveState" column="leaveState" />
+		<result property="leaveBoolean" column="leaveBoolean" />
+	</resultMap>
+
+	<resultMap type="users" id="Alluser">
+		<id property="id" column="id" />
+		<result property="loginName" column="loginName" />
+		<result property="passwords" column="passwords" />
+		<result property="isLookout" column="isLookout" />
+		<result property="lastLoginTime" column="lastLoginTime" />
+		<result property="createTime" column="createTime" />
+		<result property="psdWrongTime" column="psdWrongTime" />
+		<result property="lockTime" column="lockTime" />
+		<result property="protectEMail" column="protectEMail" />
+		<result property="protectMTel" column="protectMTel" />
+		<result property="leaveState" column="leaveState" />
+		<result property="leaveBoolean" column="leaveBoolean" />
+	</resultMap>
+
+</mapper>

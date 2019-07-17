@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+	<!-- setting配置根据需要再添加 -->
+    <settings>
+		<!-- 指定mybatis使用log4j记录日志,在控制台显示Mybatis执行SQL语句的细节信息 -->
+    	<setting name="logImpl" value="LOG4J"/>
+    </settings>
+
+	<typeAliases>
+		<package name="com.cyj.entity" />
+	</typeAliases>
+
+</configuration>

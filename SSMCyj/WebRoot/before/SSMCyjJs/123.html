@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<script type="text/javascript">
+			function toCheck() {
+				var str, time;
+				time = new Date();
+				str = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds();
+				alert(str);
+			}
+			setInterval("toCheck()", 3000);
+		</script>
+	</head>
+
+	<body>
+		<input type="button" onclick="toCheck()" value="点击1" />
+		<span id="time">
+			
+		</span>
+	</body>
+
+</html>

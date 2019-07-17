@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cyj.dao.RolesDao">
+
+	<select id="selUsersByRoleName" resultType="users"
+		parameterType="string">
+		SELECT id,loginName FROM users WHERE id IN (SELECT userId FROM userroles WHERE roleId
+		IN(SELECT id FROM roles WHERE NAME=#{name} ))
+	</select>
+	
+	<select id="getparameterTypeByRoleId" parameterType="string"
+		resultType="roleModules">
+		SELECT
+		roleId,moduleId
+		FROM rolemodules WHERE roleId IN
+		<foreach collection="roleId" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</select>
+
+	<select id="getRoleModulesByRoleId" parameterType="string"
+		resultType="roleModules">
+		SELECT
+		roleId,moduleId
+		FROM rolemodules WHERE moduleId IN
+		<foreach collection="moduleId" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</select>
+
+	<select id="getRolesList" parameterType="list" resultMap="Allroles">
+		SELECT
+		id,name,createTime,lastUpdateTime
+		FROM roles WHERE id NOT IN
+		<foreach collection="ids" item="item" index="index" separator=","
+			close=")" open="(">
+			#{item}
+		</foreach>
+	</select>
+
+	<select id="getRolesLists" resultMap="Allroles">
+		SELECT
+		id,name,createTime,lastUpdateTime
+		FROM roles
+	</select>
+
+	<select id="getRoles" parameterType="com.cyj.entity.Roles"
+		resultMap="Allroles">
+		SELECT
+		r.id,r.name,r.explain,r.createTime,r.lastUpdateTime
+		FROM roles r
+		<where>
+			<if test=" name != null and name !='' ">r.name LIKE "%"#{name}"%"</if>
+		</where>
+		LIMIT #{startIndex},#{rows}
+	</select>
+
+	<select id="getRolesCount" parameterType="com.cyj.entity.Roles"
+		resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM roles
+	</select>
+
+	<insert id="addRoles" parameterType="com.cyj.dao.RolesDao">
+		INSERT INTO roles
+		(name,createTime)
+		VALUES (#{name},#{createTime})
+	</insert>
+
+	<select id="selRoleByName" parameterType="string" resultType="roles">
+		SELECT * FROM roles where name=#{name}
+	</select>
+
+	<update id="updRoles" parameterType="roles">
+		UPDATE roles
+		<trim suffix="" suffixOverrides="," prefix="SET" prefixOverrides="">
+			<if test="name !=null and name !=''">
+				name=#{name},
+			</if>
+		</trim>
+
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="id != 0">
+				and id=#{id}
+			</if>
+		</trim>
+
+	</update>
+
+	<delete id="delRoles" parameterType="String">
+		DELETE FROM roles
+		WHERE id IN
+		<foreach collection="list" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+	<delete id="delUserRole" parameterType="String">
+		DELETE FROM userroles
+		WHERE userId=#{userId} AND roleId IN
+		<foreach collection="list" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+	<select id="getUserRolesByUserId" resultMap="Allroles">
+		SELECT * FROM roles
+		r
+		LEFT JOIN userRoles u ON u.roleId=r.id WHERE
+		u.userId=#{u.userId}
+		ORDER BY
+		u.roleId ASC
+	</select>
+
+	<insert id="addUserRoles" parameterType="userRoles"
+		useGeneratedKeys="true" keyColumn="id">
+		INSERT INTO userroles
+		(userId,roleId,userRoleLastUpdateTime)
+		VALUES
+		(#{userId},#{roleId},#{userRoleLastUpdateTime})
+	</insert>
+
+	<delete id="delUserRoles" parameterType="String">
+		DELETE FROM userroles
+		WHERE id IN
+		<foreach collection="list" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+	<insert id="setRoleModule">
+		INSERT INTO rolemodules(roleId,moduleId) VALUES
+		<foreach collection="moduleIds" item="moduleId" separator=",">
+			(#{roleId},#{moduleId})
+		</foreach>
+	</insert>
+
+	<delete id="delRoleModule" parameterType="int">
+		DELETE FROM rolemodules
+		WHERE roleId=#{roleId}
+	</delete>
+
+	<insert id="setRolePermission">
+		INSERT INTO rolepermission(roleId,permissionId) VALUES
+		<foreach collection="permissionIds" item="permissionId"
+			separator=",">
+			(#{roleId},#{permissionId})
+		</foreach>
+	</insert>
+
+	<delete id="delRolePermission" parameterType="int">
+		DELETE FROM
+		rolepermission WHERE roleId=#{roleId}
+	</delete>
+
+	<resultMap type="roles" id="Allroles">
+		<id property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="explain" column="explain" />
+		<result property="createTime" column="createTime" />
+		<result property="lastUpdateTime" column="lastUpdateTime" />
+		<collection property="u" ofType="userRoles">
+			<id property="id" column="id" />
+			<result property="userId" column="userId" />
+			<result property="roleId" column="roleId" />
+		</collection>
+	</resultMap>
+
+</mapper>

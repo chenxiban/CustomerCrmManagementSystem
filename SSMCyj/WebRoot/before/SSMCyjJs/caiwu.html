@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>员工财务</title>
+		<link rel="icon" href="img/timg.jpg">
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/icon.css" />
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/default/easyui.css" />
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/jscript" src="js/jquery.edatagrid.js"></script>
+		<style>
+			.datagrid-td-rownumber {
+				height: 26px;
+			}
+		</style>
+		
+
+	</head>
+
+	<body style="background: url(img/xingk2.jpg) no-repeat; background-size: 100% 710px">
+		<table name="center" class="easyui-datagrid" id="dg" toolbar="#toolbar" title="网络跟踪" collapsible="true" style="width:100%; height:444px;overflow:auto" data-options="fitColumns:false,rownumbers:true,split:true,pagination:true,pageSize:10,singleSelect: true">
+			<thead>
+				<tr>
+					<th data-options="field:'faDate',align:'center',width:140">日期</th>
+					<th data-options="field:'jiBen',align:'center',width:140">基本工资</th>
+					<th data-options="field:'daBiao',align:'center',width:140">满勤奖金</th>
+					<th data-options="field:'siJin',align:'center',width:140">四金缴纳总额</th>
+					<th data-options="field:'geShui',align:'center',width:140">个税</th>
+					<th data-options="field:'xianJin',align:'center',width:140">现金发放</th>
+					<th data-options="field:'zongJi',align:'center',width:140">总计</th>
+				</tr>
+			</thead>
+		</table>
+
+		<div id="toolbar" style="padding:5px; height:auto;background: url(img/xingk1.jpg) no-repeat; background-size: 100% auto">
+			<div id="tb" style="margin-bottom:5px">
+				<from id="sousuo" method="post">
+					日期: <input type="text" class="easyui-datebox" name="s_bbirthday" id="s_bbirthday" size="11" editable="false" /> &nbsp;&nbsp;
+					<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="javascript:doSearch()">查询</a>
+				</from>
+			</div>
+		</div>
+
+	</body>
+	
+	
+	<script type="text/javascript">
+			var token = window.localStorage.getItem("token"); //取出暂存的token数据
+			var loginNames = window.localStorage.getItem("loginName"); // 登录用户的名称
+
+			$(function() {
+				$("#dg").edatagrid({ //为了加载小图标
+					url: 'http://localhost:8080/SSMCyj/vacation/getVacationGz.php',
+					queryParams: { //datagrid的固定参数
+						token: token, //必传
+						loginName: loginNames
+					},
+					columns: [
+						[{
+								field: 'faDate',
+								align: 'center',
+								title: '日期',
+								width: 140
+							},
+							{
+								field: 'jiBen',
+								align: 'center',
+								title: '基本工资',
+								width: 140
+							},
+							{
+								field: 'daBiao',
+								align: 'center',
+								title: '满勤奖金',
+								width: 140
+							},
+							{
+								field: 'siJin',
+								align: 'center',
+								title: '四金缴纳总额',
+								width: 140
+							},
+							{
+								field: 'geShui',
+								align: 'center',
+								title: '个税',
+								width: 140
+							},
+							{
+								field: 'xianJin',
+								width: 140,
+								align: 'center',
+								title: '现金发放'
+							},
+							{
+								field: 'zongJi',
+								width: 140,
+								align: 'center',
+								title: '总计'
+							}
+						]
+					],
+					onLoadSuccess: function(row) {
+						$(".easyui-linkbutton").linkbutton();
+						console.log(row);
+					}
+				});
+				
+			});
+			
+			function doSearch() {
+				$("#dg").datagrid('load',{ //为了加载小图标
+					queryParams: { //datagrid的固定参数
+						token: token, //必传
+						loginName: loginNames,
+						kqYue: $('#s_bbirthday').datebox('getValue')
+					},
+					columns: [
+						[{
+								field: 'faDate',
+								align: 'center',
+								title: '日期',
+								width: 140
+							},
+							{
+								field: 'jiBen',
+								align: 'center',
+								title: '基本工资',
+								width: 140
+							},
+							{
+								field: 'daBiao',
+								align: 'center',
+								title: '满勤奖金',
+								width: 140
+							},
+							{
+								field: 'siJin',
+								align: 'center',
+								title: '四金缴纳总额',
+								width: 140
+							},
+							{
+								field: 'geShui',
+								align: 'center',
+								title: '个税',
+								width: 140
+							},
+							{
+								field: 'xianJin',
+								width: 140,
+								align: 'center',
+								title: '现金发放'
+							},
+							{
+								field: 'zongJi',
+								width: 140,
+								align: 'center',
+								title: '总计'
+							}
+						]
+					]
+				});
+
+			}
+		</script>
+
+</html>

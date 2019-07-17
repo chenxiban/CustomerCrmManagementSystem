@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<title>河南省</title>
+	</head>
+
+	<body >
+		<div id="map" style="width:800px;height: 500px;"></div>
+		<script type="text/javascript" src="js/jquery.min.js"></script>
+		<script src="js/highmaps.js"></script>
+		<script src="https://data.jianshukeji.com/geochina/henan.js"></script>
+		<script>
+			var data = [];
+			var token = window.localStorage.getItem("token"); //取出暂存的token数据
+
+			$(function() {
+				$.post("http://localhost:8080/SSMCyj/students/getStudentByAdd.php", {
+					token: token
+				}, function(res) {
+					if(res.success) {
+						// 随机数据
+						data = [{
+							"name": "郑州",
+							"value": res.message.zz
+						}, {
+							"name": "开封",
+							"value": res.message.kf
+						}, {
+							"name": "洛阳",
+							"value": res.message.ly
+						}, {
+							"name": "平顶山",
+							"value": res.message.pds
+						}, {
+							"name": "安阳",
+							"value": res.message.ay
+						}, {
+							"name": "鹤壁",
+							"value": res.message.hb
+						}, {
+							"name": "新乡",
+							"value": res.message.xx
+						}, {
+							"name": "焦作",
+							"value": res.message.jz
+						}, {
+							"name": "濮阳",
+							"value": res.message.py
+						}, {
+							"name": "许昌",
+							"value": res.message.xc
+						}, {
+							"name": "漯河",
+							"value": res.message.lh
+						}, {
+							"name": "三门峡",
+							"value": res.message.smx
+						}, {
+							"name": "南阳",
+							"value": res.message.ny
+						}, {
+							"name": "商丘",
+							"value": res.message.sq
+						}, {
+							"name": "信阳",
+							"value": res.message.xy
+						}, {
+							"name": "周口",
+							"value": res.message.zk
+						}, {
+							"name": "驻马店",
+							"value": res.message.zmd
+						}, {
+							"name": "济源",
+							"value": res.message.jy
+						}];
+
+					}
+					var map = new Highcharts.Map('map', {
+						title: {
+							text: '河南省学生分布图'
+						},
+						colorAxis: {
+							min: 0,
+							minColor: 'rgb(255,255,255)',
+							maxColor: '#006cee'
+						},
+						series: [{
+							data: data,
+							name: '地区人数',
+							mapData: Highcharts.maps['cn/henan'],
+							joinBy: 'name' // 根据 name 属性进行关联
+						}]
+					});
+				}, "json");
+
+			})
+		</script>
+	</body>
+
+</html>

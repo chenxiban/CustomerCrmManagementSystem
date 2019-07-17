@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cyj.dao.UserRolesDao">
+
+	<select id="getUserRoles" resultMap="Allusers">
+		SELECT * FROM userRoles u
+		INNER JOIN roles r ON u.roleId=r.id INNER JOIN users us ON
+		us.id=u.userId
+	</select>
+	
+	<select id="getUserRolesByRoleId" parameterType="string" resultType="userRoles">
+		SELECT
+		userId,roleId
+		FROM userroles WHERE userId IN 
+		<foreach collection="userId" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</select>
+
+	<select id="getUserRole" resultType="int" parameterType="int">
+		SELECT roleId FROM userroles WHERE userId = #{userId}
+	</select>
+	
+	<select id="getUserId" resultType="string">
+		SELECT DISTINCT userId FROM userroles
+	</select>
+
+	<resultMap type="userRoles" id="Allusers">
+		<id property="id" column="id" />
+		<result property="roleId" column="roleId" />
+		<result property="userId" column="userId" />
+		<association property="roles" javaType="roles">
+			<id property="id" column="id" />
+			<result property="name" column="name" />
+		</association>
+	</resultMap>
+
+</mapper>

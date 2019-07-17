@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cyj.dao.DyNamicMessagesDao">
+	<select id="getDyNamicMessages" parameterType="com.cyj.entity.DyNamicMessages"
+		resultType="dyNamicMessages">
+		SELECT
+		*
+		FROM
+		dynamicmessages
+		<where>
+			<if test="isOpen !=null and isOpen !='' ">
+				isOpen=#{isOpen}
+			</if>
+			<if test="ids != null ">
+				AND id IN
+				<foreach collection="ids" item="item" index="index"
+					separator="," close=")" open="(">
+					#{item}
+				</foreach>
+			</if>
+			LIMIT #{startIndex},#{rows}
+		</where>
+	</select>
+
+	<select id="getDyNamicMessagesCount" parameterType="com.cyj.entity.DyNamicMessages"
+		resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM dynamicmessages
+		<where>
+			<if test="isOpen !=null and isOpen !='' ">
+				isOpen=#{isOpen}
+			</if>
+			<if test="ids != null ">
+				AND id IN
+				<foreach collection="ids" item="item" index="index"
+					separator="," close=")" open="(">
+					#{item}
+				</foreach>
+			</if>
+		</where>
+	</select>
+
+	<select id="selDyNamicMessages" resultType="string"
+		parameterType="dynamicmessages">
+		SELECT id FROM dynamicmessages WHERE isOpen="是" AND
+		studentName IN
+		(SELECT NAME FROM students WHERE ziXunName=#{ziXunName})
+	</select>
+
+	<update id="updDyNamicMessages" parameterType="string">
+		UPDATE dynamicmessages
+		<trim suffix="" suffixOverrides="," prefix="SET" prefixOverrides="">
+			<if test="isOpen !=null and isOpen !=''">
+				isOpen=#{isOpen},
+			</if>
+		</trim>
+
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="id != 0">
+				and id=#{id}
+			</if>
+		</trim>
+	</update>
+
+	<delete id="delDyNamicMessages" parameterType="String">
+		DELETE FROM dynamicmessages
+		WHERE
+		id IN
+		<foreach collection="id" item="item" index="index" separator=","
+			close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+	<insert id="addDyNamicMessages" parameterType="dyNamicMessages"
+		useGeneratedKeys="true" keyColumn="id">
+		INSERT INTO dynamicmessages
+		(studentId,studentName,messageContent)
+		VALUES
+		(#{studentId},#{studentName},#{messageContent})
+	</insert>
+
+</mapper>

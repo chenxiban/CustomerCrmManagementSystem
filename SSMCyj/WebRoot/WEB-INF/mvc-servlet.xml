@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd	
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+	<!-- 启用SpringMVC注解 自定义参数转换器 -->
+	<mvc:annotation-driven>
+		<!--配置JSON转换器: 要让Spring MVC响应JSON数据，需要依赖第三方库jackson. -->
+		<!-- 处理中文乱码问题,可以选择 mvc:message-converters 或者 produces="text/html;charset=UTF-8" 
+			,前者只需配置一次,后者每个方法都需要配置 -->
+		<mvc:message-converters>
+			<!-- 使用Jackson转换器 -->
+			<bean
+				class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+				<property name="supportedMediaTypes">
+					<list>
+						<value>text/html;charset=UTF-8</value>
+						<value>text/plain;charset=UTF-8</value>
+						<value>application/json;charset=UTF-8</value>
+					</list>
+				</property>
+			</bean>
+		</mvc:message-converters>
+
+	</mvc:annotation-driven>
+
+	<!-- 启用组件扫描 扫描控制器 -->
+	<context:component-scan base-package="com.cyj.controller"></context:component-scan>
+
+	<!-- 视图解析器 -->
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.JstlView" />
+		<property name="prefix" value="/WEB-INF/html/" />
+		<property name="suffix" value=".html" />
+	</bean>
+
+	<!-- SpringMVC框架支持的文件上传 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="utf-8"></property>
+		<property name="maxUploadSize" value="10485760000"></property>
+		<property name="maxInMemorySize" value="40960"></property>
+	</bean>
+
+	<mvc:interceptors>
+			<!-- 用户登录拦截器 -->
+		<!-- <bean class="com.ysd.interceptor.TokenLoginInterceptor"/> -->
+		<!-- 符合 SpringMVC url-pattern 的所有请求  权限管理身份识别拦截器-->
+		 <bean class="com.cyj.interceptor.LoginInterceptor" ></bean>
+		 <!-- 符合 SpringMVC url-pattern 的所有请求   允许跨域访问  用户登录拦截器-->
+		 <bean class="com.cyj.interceptor.EmptyLoginInterceptor" ></bean>
+	</mvc:interceptors>
+
+	<!-- 找不到的控制器请求映射,则使用默认的Servlet的处理方式来响应 一般是静态文件。 -->
+	<mvc:default-servlet-handler/>
+	
+	<!-- SpringMVC框架支持的文件上传 -->
+	<bean class="org.springframework.web.multipart.commons.CommonsMultipartResolver">  
+        <property name="defaultEncoding" value="utf-8"></property>   
+        <property name="maxUploadSize" value="10485760000"></property>  
+        <property name="maxInMemorySize" value="40960"></property>
+   </bean>
+
+</beans>

@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>应用模块</title>
+		<link rel="icon" href="img/timg.jpg">
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/icon.css" />
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/default/easyui.css" />
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/jscript" src="js/easyUIvalidate.js"></script>
+
+		<script type="text/javascript" src="js/highcharts.js"></script>
+		<script type="text/javascript" src="js/highcharts-more.js"></script>
+		<script type="text/javascript" src="js/exporting.js"></script>
+		<script type="text/javascript" src="js/highcharts-zh_CN.js"></script>
+		<style>
+			#tou {
+				background: url(img/xingk2.jpg) no-repeat;
+				background-size: 100% 70px;
+			}
+			
+			#zuo {
+				background: url(img/xingk2.jpg) no-repeat;
+			}
+			
+			.datagrid-td-rownumber {
+				height: 26px;
+			}
+		</style>
+		<script>
+			var token = window.localStorage.getItem("token"); //取出暂存的token数据
+			var loginIds = window.localStorage.getItem("loginId"); // 登录用户的id
+			var loginNames = window.localStorage.getItem("loginName"); // 登录用户的名称
+			var roleId = window.localStorage.getItem("roleIds"); // 登录用户拥有的角色
+			var loginSignState = window.localStorage.getItem("signState");
+			var myleaveState = window.localStorage.getItem("leaveState");
+			var myleaveBoolean = window.localStorage.getItem("leaveBoolean");
+			let p;
+
+			//树形结构显示
+			$(function() {
+				loadTree();
+				
+				$('#portrait').click(function() {
+					$("#uploadPic").window('open');
+				});
+				
+				p = roleId.split(",");
+				for(var i = 0; i < p.length; i++) {
+					if(p[i] == 2 || p[i] == 15) {
+						$("#VacInfo").show();
+						$("#VacInfos").show();
+					} else {
+						$("#VacInfo").hide();
+						$("#VacInfos").hide();
+					}
+				}
+				
+				if(myleaveState == "否"){
+					$("#VacBaoDao").hide();
+					$("#VacBaoDaos").hide();
+				}else{
+					$("#VacBaoDao").show();
+					$("#VacBaoDaos").show();
+				}
+				
+				if (myleaveBoolean == "否") {
+					$("#VacAdd").hide();
+					$("#VacAdds").hide();
+				} else{
+					$("#VacAdd").show();
+					$("#VacAdds").show();
+				}
+
+			});
+
+			function handlePermission() {
+				console.log('权限控制插件data-require-permission.js加载成功!');
+				let permission = window.localStorage.getItem("permission"); //从session缓存中取出权限数组
+				console.log("权限控制插件permission=>" + permission);
+				$("*[data-require-permission]").map((i, ele) => {
+					let elePer = $(ele).attr('data-require-permission');
+					console.log("elePer=>" + elePer);
+
+					let p = permission.split(",");
+
+					let requireRemove = true;
+
+					for(var i = 0; i < p.length; i++) {
+						if(elePer == p[i]) requireRemove = false;
+					}
+					if(requireRemove) {
+						$(ele).remove();
+					};
+				});
+			}
+
+			function signState() {
+				$("#sign").html('已签退');
+			}
+
+			function loadTree() {
+				$("#dlName").html(loginNames);
+				$("#sign").html(loginSignState);
+				var token = window.localStorage.getItem("token");
+
+				$("#treeUlId").tree({
+					url: 'http://localhost:8080/SSMCyj/modules/queryMenuTree.php',
+					queryParams: {
+						token,
+						roleId
+					},
+					animate: true,
+					lines: true, //显示虚线
+					onClick: onclickTree
+				}); //让easyUI引擎重新将treeUIId中的html代码转变成树并显示
+
+				$("#btn").click(function() {
+					$.messager.confirm("确认", "您确定要退出吗？", function(r) {
+						if(r) {
+							window.localStorage.clear();
+							window.location.href = "login.html";
+						}
+					})
+				})
+
+				$("#sign").click(function() {
+					var a = $("#sign").html();
+
+					if(a == "已签到") {
+						$.messager.alert({
+							title: '提示信息',
+							msg: '您今天已签到!',
+							timeout: 3000, //推出时间
+							showType: 'slide', //动画效果
+							showSpeed: 3000
+							//显示时间
+						});
+						return;
+					}
+
+					if(a == "已签退") {
+						$.messager.alert({
+							title: '提示信息',
+							msg: '您今天已签退,请明天再来签到!',
+							timeout: 3000, //推出时间
+							showType: 'slide', //动画效果
+							showSpeed: 3000
+							//显示时间
+						});
+						return;
+					}
+
+					$.messager.confirm("确认", "您确定要签到吗？", function(r) {
+						if(r) {
+							$.post('http://localhost:8080/SSMCyj/signin/addSignin.php', {
+								token: token,
+								signState: '已签到',
+								userId: loginIds
+							}, function(res) {
+								if(res.success) {
+									$.messager.alert({
+										title: '提示信息',
+										msg: res.message,
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 3000,
+										//显示时间
+										fn: function() {
+											$('#dg').datagrid('reload');
+											$("#sign").html('已签到');
+										}
+									});
+								} else {
+									$.messager.alert({
+										title: '提示信息',
+										msg: res.message,
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 3000
+										//显示时间
+									});
+									return;
+								}
+							}, "json");
+						}
+					})
+				})
+
+			}
+
+			function loginOut() {
+				window.localStorage.clear();
+				window.location.href = "login.html";
+			}
+
+			function updBaoDao() {
+				$.messager.confirm("确认", "您确定要报到吗？", function(r) {
+					if(r) {
+						$.post('http://localhost:8080/SSMCyj/vacation/updVacationByState.php', {
+							token: token,
+							userId: loginIds
+						}, function(res) {
+							if(res.success) {
+								$.messager.alert('内容信息', res.message, 'info');
+								parent.location.reload();
+								window.localStorage.setItem("leaveState","否");
+								window.localStorage.setItem("leaveBoolean","是");
+							} else {
+								$.messager.alert('内容信息', res.message, 'info');
+							}
+						}, "json");
+					}
+				});
+
+			}
+
+			var isLeaf;
+
+			function onclickTree(node) {
+				isLeaf = $("#treeUlId").tree('isLeaf', node.target);
+				console.log("被单击的节点是  => " + node.text);
+				if(node.attributes) { //子菜单
+					openTab(node.text, node.attributes.url);
+				} else if(node.id == "00") { //全部展开收缩菜单
+					$("#treeUlId").tree(
+						node.state === 'closed' ? 'expandAll' : 'collapseAll');
+					node.state = node.state === 'closed' ? 'open' : 'closed';
+					//    						$('#tree').tree('collapseAll');//折叠全部
+					//							$('#tree').tree('expandAll');//展开全部
+				} else { //其它根菜单
+					$("#treeUlId").tree(node.state === 'closed' ? 'expand' : 'collapse',
+						node.target);
+					node.state = node.state === 'closed' ? 'open' : 'closed';
+				}
+
+			}
+
+			//新增tab
+			function openTab(text, url) {
+				if($("#tt").tabs('exists', text)) {
+					$("#tt").tabs('select', text);
+				} else {
+					var content = "<iframe frameborder='0' scrolling='auto' style='width:100%;height:98%;' src=" +
+						url + "></iframe>";
+					if(isLeaf) {
+						$("#tt").tabs('add', {
+							title: text,
+							closable: true,
+							content: content
+						});
+					}
+				}
+			}
+
+			/*
+			 * 获取当前时间
+			 */
+			function getNow() {
+				var now = new Date();
+				return {
+					hours: now.getHours() + now.getMinutes() / 60,
+					minutes: now.getMinutes() * 12 / 60 + now.getSeconds() * 12 / 3600,
+					seconds: now.getSeconds() * 12 / 60
+				};
+			}
+			/**
+			 * Pad numbers
+			 */
+			function pad(number, length) {
+				return new Array((length || 2) + 1 - String(number).length).join(0) + number;
+			}
+
+			//表单序列化以后去掉表单中值为空的参数
+			function serializeNotNull(serStr) {
+				return serStr.split("&").filter(function(str) {
+					return !str.endsWith("=")
+				}).join("&");
+			}
+
+			function addVacation() {
+				$('#myVacation').dialog({
+					title: '申请请假'
+				});
+
+				$('#addidss').val(loginIds);
+
+				$('#names').textbox('setValue', loginNames);
+
+				$('#myVacation').dialog('open');
+			}
+
+			function addVacationA() {
+				$.messager.confirm('确认', '您确认想要请假吗？', function(r) {
+					if(r) { // 用户点击了确认按钮
+						var formData = serializeNotNull($('#fms').serialize());
+						var boo = $('#fms').form('validate');
+						if(boo) {
+							$.ajax({
+								type: "POST",
+								url: "http://localhost:8080/SSMCyj/vacation/addVacation.php?token=" + token,
+								cache: false,
+								data: formData,
+								dataType: "json",
+								success: function(result) {
+									$.messager.alert("系统提示", result.message);
+									closeVacationDialogs();
+									parent.location.reload();
+									window.localStorage.setItem("leaveState","否");
+									window.localStorage.setItem("leaveBoolean","否");
+								},
+								error: function(result) {
+									$.messager.alert("系统提示", result.message);
+									return;
+								}
+							});
+						}
+					}
+				});
+			}
+
+			function closeVacationDialogs() {
+				$('#myVacation').dialog("close");
+				$('#fms').form('clear');
+			}
+
+			function formatterContent(value, row, index) {
+				if(row.content != undefined) {
+					return row.content.substr(0, 15) + "...";
+				} else {
+					return "暂无";
+				}
+			}
+
+			//操作用户
+			function formatterOPUser(value, row, index) {
+				return "<a class='easyui-linkbutton' iconCls='icon-search' style='cursor: pointer;' onclick='showTail(" + index + ")'>查看</a> <a class='easyui-linkbutton' iconCls='icon-edit' style='cursor: pointer;' onclick='updVac(" +
+					index + ")'>编辑</a>";
+			}
+
+			//操作用户
+			function formatterOPUserTwo(value, row, index) {
+				return "<a class='easyui-linkbutton' iconCls='icon-search' style='cursor: pointer;' onclick='showTailTwo(" + index + ")'>查看</a> <a class='easyui-linkbutton' iconCls='icon-edit' style='cursor: pointer;' onclick='updVacTwo(" +
+					index + ")'>编辑</a>";
+			}
+
+			//操作用户
+			function formatterOPUserThree(value, row, index) {
+				return "<a class='easyui-linkbutton' iconCls='icon-search' style='cursor: pointer;' onclick='showTailThree(" + index + ")'>查看</a> <a class='easyui-linkbutton' iconCls='icon-edit' style='cursor: pointer;' onclick='updVacThree(" +
+					index + ")'>编辑</a>";
+			}
+
+			//操作用户
+			function formatterOPUserFour(value, row, index) {
+				return "<a class='easyui-linkbutton' iconCls='icon-search' style='cursor: pointer;' onclick='showTailFour(" + index + ")'>查看</a> <a class='easyui-linkbutton' iconCls='icon-edit' style='cursor: pointer;' onclick='updVacFour(" +
+					index + ")'>编辑</a>";
+			}
+
+			function getVacation() {
+				$('#getVacations').window({
+					title: '请假信息'
+				});
+
+				$('#getVacations').window('open');
+
+				$("#vacs").datagrid({ //为了加载小图标
+					url: 'http://localhost:8080/SSMCyj/vacation/getVacation.php',
+					queryParams: { //datagrid的固定参数
+						token: token, //必传
+						isAgree: '审核中'
+					},
+					columns: [
+						[{
+								field: 'id',
+								align: 'center',
+								width: 280,
+								title: '员工ID',
+								hidden: true
+							},
+							{
+								field: 'name',
+								align: 'center',
+								title: '员工名称',
+								width: 80
+							},
+							{
+								field: 'leaveType',
+								align: 'center',
+								title: '请假类型',
+								width: 80
+							},
+							{
+								field: 'leaveDate',
+								align: 'center',
+								title: '请假天数',
+								width: 80
+							},
+							{
+								field: 'content',
+								align: 'center',
+								width: 250,
+								title: '请假原因',
+								formatter: formatterContent
+							},
+							{
+								field: 'leaveTime',
+								align: 'center',
+								title: '请假时间',
+								width: 180
+							},
+							{
+								field: 'endTime',
+								align: 'center',
+								title: '结束时间',
+								width: 180
+							},
+							{
+								field: 'setPassword',
+								width: 140,
+								align: 'center',
+								title: '操作',
+								formatter: formatterOPUser
+							},
+						]
+					],
+					onLoadSuccess: function() {
+						$(".easyui-linkbutton").linkbutton();
+						handlePermission();
+					}
+				});
+
+				$("#vacNo").datagrid({ //为了加载小图标
+					url: 'http://localhost:8080/SSMCyj/vacation/getVacation.php',
+					queryParams: { //datagrid的固定参数
+						token: token, //必传
+						isAgree: '不准许'
+					},
+					columns: [
+						[{
+								field: 'id',
+								align: 'center',
+								width: 280,
+								title: '员工ID',
+								hidden: true
+							},
+							{
+								field: 'name',
+								align: 'center',
+								title: '员工名称',
+								width: 80
+							},
+							{
+								field: 'leaveType',
+								align: 'center',
+								title: '请假类型',
+								width: 80
+							},
+							{
+								field: 'leaveDate',
+								align: 'center',
+								title: '请假天数',
+								width: 80
+							},
+							{
+								field: 'content',
+								align: 'center',
+								width: 250,
+								title: '请假原因',
+								formatter: formatterContent
+							},
+							{
+								field: 'leaveTime',
+								align: 'center',
+								title: '请假时间',
+								width: 180
+							},
+							{
+								field: 'endTime',
+								align: 'center',
+								title: '结束时间',
+								width: 180
+							},
+							{
+								field: 'setPassword',
+								width: 140,
+								align: 'center',
+								title: '操作',
+								formatter: formatterOPUserTwo
+							},
+						]
+					],
+					onLoadSuccess: function() {
+						$(".easyui-linkbutton").linkbutton();
+						handlePermission();
+					}
+				});
+
+				$("#vacYes").datagrid({ //为了加载小图标
+					url: 'http://localhost:8080/SSMCyj/vacation/getVacation.php',
+					queryParams: { //datagrid的固定参数
+						token: token, //必传
+						isAgree: '准假'
+					},
+					columns: [
+						[{
+								field: 'id',
+								align: 'center',
+								width: 280,
+								title: '员工ID',
+								hidden: true
+							},
+							{
+								field: 'name',
+								align: 'center',
+								title: '员工名称',
+								width: 80
+							},
+							{
+								field: 'leaveType',
+								align: 'center',
+								title: '请假类型',
+								width: 80
+							},
+							{
+								field: 'leaveDate',
+								align: 'center',
+								title: '请假天数',
+								width: 80
+							},
+							{
+								field: 'content',
+								align: 'center',
+								width: 250,
+								title: '请假原因',
+								formatter: formatterContent
+							},
+							{
+								field: 'leaveTime',
+								align: 'center',
+								title: '请假时间',
+								width: 180
+							},
+							{
+								field: 'endTime',
+								align: 'center',
+								title: '结束时间',
+								width: 180
+							},
+							{
+								field: 'setPassword',
+								width: 140,
+								align: 'center',
+								title: '操作',
+								formatter: formatterOPUserThree
+							},
+						]
+					],
+					onLoadSuccess: function() {
+						$(".easyui-linkbutton").linkbutton();
+						handlePermission();
+					}
+				});
+			}
+
+			function showTail(index) {
+				var data = $("#vacs").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+
+				$("#namess").html(row.name);
+				$("#leaveTypes").html(row.leaveType);
+				$("#leaveDates").html(row.leaveDate);
+				$("#leaveTimes").html(row.leaveTime);
+				$("#endTimes").html(row.endTime);
+				$("#isAgrees").html(row.isAgree);
+				$("#contents").html(row.content);
+				$("#pName").html(row.pName);
+				$("#pContents").html(row.pContent);
+
+				$('#showStu').window('open');
+			}
+
+			function showTailTwo(index) {
+				var data = $("#vacNo").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+
+				$("#namess").html(row.name);
+				$("#leaveTypes").html(row.leaveType);
+				$("#leaveDates").html(row.leaveDate);
+				$("#leaveTimes").html(row.leaveTime);
+				$("#endTimes").html(row.endTime);
+				$("#isAgrees").html(row.isAgree);
+				$("#contents").html(row.content);
+				$("#pName").html(row.pName);
+				$("#pContents").html(row.pContent);
+
+				$('#showStu').window('open');
+			}
+
+			function showTailThree(index) {
+				var data = $("#vacYes").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+
+				$("#namess").html(row.name);
+				$("#leaveTypes").html(row.leaveType);
+				$("#leaveDates").html(row.leaveDate);
+				$("#leaveTimes").html(row.leaveTime);
+				$("#endTimes").html(row.endTime);
+				$("#isAgrees").html(row.isAgree);
+				$("#contents").html(row.content);
+				$("#pName").html(row.pName);
+				$("#pContents").html(row.pContent);
+
+				$('#showStu').window('open');
+			}
+
+			function showTailFour(index) {
+				var data = $("#myVacs").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+
+				$("#mynamess").html(row.name);
+				$("#myleaveTypes").html(row.leaveType);
+				$("#myleaveDates").html(row.leaveDate);
+				$("#myleaveTimes").html(row.leaveTime);
+				$("#myendTimes").html(row.endTime);
+				$("#myisAgrees").html(row.isAgree);
+				$("#mycontents").html(row.content);
+				$("#mypName").html(row.pName);
+				$("#mypContents").html(row.pContent);
+
+				$('#showMyVac').window('open');
+			}
+
+			function updVac(index) {
+				var data = $("#vacs").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+
+				$("#idss").val(row.id);
+				$("#pNamess").val(loginNames);
+
+				$("#updname").textbox('setValue', row.name);
+				$("#updleaveType").combobox('setValue', row.leaveType);
+				$("#updisAgree").combobox('setValue', row.isAgree);
+				$("#updleaveTime").datetimebox('setValue', row.leaveTime);
+				$("#updcontent").textbox('setValue', row.content);
+				$("#updpContent").textbox('setValue', row.pContent);
+
+				$("#updleaveDate").numberbox('setValue', row.leaveDate);
+				$("#updendTime").datetimebox('setValue', row.endTime);
+
+				$('#updStu').window('open');
+			}
+
+			function updVacTwo(index) {
+				var data = $("#vacNo").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+
+				if(row.isAgree == '不准许') {
+					$.messager.alert('内容信息', '该员工请假未通过,无法进行批注!', 'info');
+					return;
+				} else {
+					$("#idss").val(row.id);
+					$("#pNamess").val(loginNames);
+
+					$("#updname").textbox('setValue', row.name);
+					$("#updleaveType").combobox('setValue', row.leaveType);
+					$("#updisAgree").combobox('setValue', row.isAgree);
+					$("#updleaveTime").datetimebox('setValue', row.leaveTime);
+					$("#updcontent").textbox('setValue', row.content);
+					$("#updpContent").textbox('setValue', row.pContent);
+
+					$("#updleaveDate").numberbox('setValue', row.leaveDate);
+					$("#updendTime").datetimebox('setValue', row.endTime);
+
+					$('#updStu').window('open');
+				}
+			}
+
+			function updVacThree(index) {
+				var data = $("#vacYes").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+
+				if(row.isAgree == '准假') {
+					$.messager.alert('内容信息', '该员工请假已通过,无法进行再次批注!', 'info');
+					return;
+				} else {
+					$("#idss").val(row.id);
+					$("#pNamess").val(loginNames);
+
+					$("#updname").textbox('setValue', row.name);
+					$("#updleaveType").combobox('setValue', row.leaveType);
+					$("#updisAgree").combobox('setValue', row.isAgree);
+					$("#updleaveTime").datetimebox('setValue', row.leaveTime);
+					$("#updcontent").textbox('setValue', row.content);
+					$("#updpContent").textbox('setValue', row.pContent);
+
+					$("#updleaveDate").numberbox('setValue', row.leaveDate);
+					$("#updendTime").datetimebox('setValue', row.endTime);
+
+					$('#updStu').window('open');
+				}
+			}
+
+			function updVacFour(index) {
+				var data = $("#myVacs").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+
+				if(row.isAgree == '准假') {
+					$.messager.alert('内容信息', '你的请假已通过,无法修改!', 'info');
+					return;
+				} else if(row.isAgree == '不准许') {
+					$.messager.alert('内容信息', '你的请假未通过,请重新申请!', 'info');
+					return;
+				} else {
+					$("#myid").val(row.id);
+					$("#mypNames").val(loginNames);
+
+					$("#myupdname").textbox('setValue', row.name);
+					$("#myupdleaveType").combobox('setValue', row.leaveType);
+					$("#myupdcontent").textbox('setValue', row.content);
+
+					$("#myupdleaveDate").numberbox('setValue', row.leaveDate);
+
+					$('#myVac').window('open');
+				}
+			}
+
+			function updateStus() {
+				var row = $('#vacs').datagrid('getChecked');
+
+				$.messager.confirm('确认', '您确认修改么？', function(r) {
+					if(r) {
+						var formData = serializeNotNull($('#editStuForm').serialize());
+						var boo = $('#editStuForm').form('validate');
+						if(boo) {
+							$.ajax({
+								type: "POST",
+								url: "http://localhost:8080/SSMCyj/vacation/updVacation.php?token=" + token,
+								cache: false,
+								data: formData,
+								dataType: "json",
+								success: function(result) {
+									$.messager.alert({
+										title: '系统提示',
+										msg: result.message,
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 3000
+										//显示时间
+									});
+									$('#updStu').window('close');
+									$('#vacs').datagrid('reload');
+									$('#vacNo').datagrid('reload');
+									$('#vacYes').datagrid('reload');
+
+								},
+								error: function(result) {
+									$.messager.alert({
+										title: '系统提示',
+										msg: result.message,
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 3000
+										//显示时间
+									});
+									return;
+								}
+							});
+						}
+
+					}
+				});
+			}
+
+			function myVacation() {
+				$('#myVacations').window({
+					title: '我的请假信息'
+				});
+
+				$("#myVacs").datagrid({ //为了加载小图标
+					url: 'http://localhost:8080/SSMCyj/vacation/getVacation.php',
+					queryParams: { //datagrid的固定参数
+						token: token, //必传
+						name: loginNames
+					},
+					columns: [
+						[{
+								field: 'id',
+								align: 'center',
+								width: 280,
+								title: '员工ID',
+								hidden: true
+							},
+							{
+								field: 'name',
+								align: 'center',
+								title: '员工名称',
+								width: 80
+							},
+							{
+								field: 'leaveType',
+								align: 'center',
+								title: '请假类型',
+								width: 80
+							},
+							{
+								field: 'isAgree',
+								align: 'center',
+								title: '审核状态',
+								width: 80
+							},
+							{
+								field: 'leaveDate',
+								align: 'center',
+								title: '请假天数',
+								width: 80
+							},
+							{
+								field: 'content',
+								align: 'center',
+								width: 230,
+								title: '请假原因',
+								formatter: formatterContent
+							},
+							{
+								field: 'leaveTime',
+								align: 'center',
+								title: '请假时间',
+								width: 160
+							},
+							{
+								field: 'endTime',
+								align: 'center',
+								title: '结束时间',
+								width: 160
+							},
+							{
+								field: 'setPassword',
+								width: 140,
+								align: 'center',
+								title: '操作',
+								formatter: formatterOPUserFour
+							},
+						]
+					],
+					onLoadSuccess: function() {
+						$(".easyui-linkbutton").linkbutton();
+						handlePermission();
+					}
+				});
+
+				$('#myVacations').window('open');
+			}
+
+			function myupdateStus() {
+				$.messager.confirm('确认', '您确认修改么？', function(r) {
+					if(r) {
+						var formData = serializeNotNull($('#editStuForms').serialize());
+						var boo = $('#editStuForms').form('validate');
+						if(boo) {
+							$.ajax({
+								type: "POST",
+								url: "http://localhost:8080/SSMCyj/vacation/updVacation.php?token=" + token,
+								cache: false,
+								data: formData,
+								dataType: "json",
+								success: function(result) {
+									$.messager.alert({
+										title: '系统提示',
+										msg: '请假信息修改成功,等待审批!',
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 3000
+										//显示时间
+									});
+									$('#myVac').window('close');
+									$('#myVacs').datagrid('load');
+								},
+								error: function(result) {
+									$.messager.alert({
+										title: '系统提示',
+										msg: '请假信息修改失败,请重新填写!',
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 3000
+										//显示时间
+									});
+									return;
+								}
+							});
+						}
+
+					}
+				});
+			}
+		</script>
+	</head>
+
+	<body class="easyui-layout">
+		<div data-options="region:'north'" id="tou" style="height:70px;overflow:hidden;">
+
+			<h3>CRM权限管理系统欢迎您:<a id="portrait" style="cursor: pointer"><img src="img/mohead.jpg" id="headpor" style="width: 50px;height: 50px;border-radius:50%; overflow:hidden;" alt="" /></a><span id="dlName"></span>&nbsp;&nbsp;
+				<!--<a style="cursor: pointer;" onclick="addVacation()">申请请假</a>&nbsp;&nbsp;
+				<a id="btn" style="cursor: pointer;">安全退出</a>&nbsp;&nbsp;-->
+				<a id="sign" style="cursor: pointer;margin-right: 20px;"></a>
+				<a id="mb" class="easyui-menubutton" data-options="menu:'#mm'" style="cursor: pointer;" >个人中心</a>   
+				<a style="float: right;margin-top:30px;margin-right: 20px;"><span id="currentdate"></span></a>
+			</h3>
+		</div>
+
+		<div id="mm" style="width:auto;background: url(img/xingk1.jpg) no-repeat;">
+			<div data-options="iconCls:'icon-man'">
+				<a style="cursor: pointer;" onclick="myVacation()">我的请假</a>
+			</div>
+			<div class="menu-sep" id="VacInfo">
+
+			</div>
+			<div id="VacInfos" data-options="iconCls:'icon-search'">
+				<a style="cursor: pointer;" onclick="getVacation()">请假信息</a>
+			</div>
+			<div class="menu-sep" id="VacAdd">
+
+			</div>
+			<div id="VacAdds" data-options="iconCls:'icon-add'">
+				<a style="cursor: pointer;" onclick="addVacation()">申请请假</a>
+			</div>
+			<div class="menu-sep" id="VacBaoDao">
+
+			</div>
+			<div id="VacBaoDaos" data-options="iconCls:'icon-ok'">
+				<a style="cursor: pointer;" onclick="updBaoDao()">请假报道</a>
+			</div>
+			<div class="menu-sep">
+
+			</div>
+			<div data-options="iconCls:'icon-redo'">
+				<a id="btn" style="cursor: pointer;">安全退出</a>
+			</div>
+		</div>
+
+		<div id="zuo" data-options="region:'west',title:'导航',split:true" style="width:160px;">
+			<!--这个地方显示树状结构-->
+			<ul id="treeUlId">
+
+			</ul>
+		</div>
+		<div id="centerTabs" data-options="region:'center'">
+			<div id="tt" class="easyui-tabs" fit="true">
+				<div title="首页" fit="true" id="ttt">
+					<strong style="margin-left:10px;font-size: 30px;">欢迎使用CRM权限管理系统！</strong>
+					<div id="container" style="width: 400px; height: 400px; margin: 0 auto;"></div>
+				</div>
+				<!--这个地方采用tabs控件进行布局-->
+			</div>
+		</div>
+
+		<!--
+            	作者：867647213@qq.com
+            	时间：2018-06-14
+            	描述：添加用户
+            -->
+		<div id="myVacation" class="easyui-dialog" style="width:400px;height:auto;padding:10px; background: url(img/beijing.jpg) no-repeat; background-size: 100% 100%;" closed="true" buttons="#dlg-buttonss">
+			<form id="fms" method="post">
+				<table>
+					<input type="easyui-validatetimebox" name="userId" id="addidss" hidden="true" />
+					<tr>
+						<td style="width: 20%;">用户名：</td>
+						<td><input name="name" id="names" readonly="true" class="easyui-textbox" style="width: 80%;">
+						</td>
+					</tr>
+					<tr>
+						<td style="width: 20%;">请假类型:</td>
+						<td>
+							<select class="easyui-combobox" name="leaveType" editable="false" panelHeight="auto" style="width: 80%;" data-options="required:true">
+								<option value="未知">--请选择--</option>
+								<option value="病假">病假</option>
+								<option value="探亲">探亲</option>
+								<option value="产假">产假</option>
+								<option value="事假">事假</option>
+								<option value="婚假">婚假</option>
+								<option value="丧假">丧假</option>
+								<option value="公假">公假</option>
+								<option value="带薪">带薪</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td style="width: 20%;">请假天数:</td>
+						<td>
+							<input class="easyui-numberbox" name="leaveDate" style="width: 80%;" data-options="required:true,validType:'intPlus'">
+						</td>
+					</tr>
+					<tr>
+						<td style="width: 20%;">请假原因:</td>
+						<td colspan="5" width="300px">
+							<input name="content" class="easyui-textbox" style="width: 80%;" maxlength="140" data-options="multiline:true" style="border: medium none; height: 40px; resize: none; display: none;">
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+		<div id="dlg-buttonss" style="background: url(img/beijing.jpg) no-repeat; background-size: 100% 100%;">
+			<a href="javascript:addVacationA()" class="easyui-linkbutton" iconCls="icon-ok">保存</a>
+			<a href="javascript:closeVacationDialogs()" class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+		</div>
+
+		<!-- 查看请假信息 -->
+		<div id="getVacations" class="easyui-window" title="" data-options="iconCls:'icon-search',minimizable:false,closed:true," style="width:70%;height:450px;">
+			<div id="tt" class="easyui-tabs" fit="true">
+				<div title="审核中" fit="true">
+					<table name="center" class="easyui-datagrid" id="vacs" collapsible="true" style="width:100%; height:380px;overflow:auto;" data-options="fitColumns:false,rownumbers:true,split:true,pagination:true,pageSize:10,singleSelect: true">
+
+					</table>
+				</div>
+				<div title="不准许" fit="true">
+					<table name="center" class="easyui-datagrid" id="vacNo" collapsible="true" style="width:100%; height:380px;overflow:auto" data-options="fitColumns:false,rownumbers:true,split:true,pagination:true,pageSize:10,singleSelect: true">
+
+					</table>
+				</div>
+				<div title="准假" fit="true">
+					<table name="center" class="easyui-datagrid" id="vacYes" collapsible="true" style="width:100%; height:380px;overflow:auto" data-options="fitColumns:false,rownumbers:true,split:true,pagination:true,pageSize:10,singleSelect: true">
+
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<!--
+            	作者：867647213@qq.com
+            	时间：2018-06-05
+            	描述：查看请假信息
+            -->
+
+		<div class="panel window easyui-fluid">
+			<div id="showStu" class="easyui-window" title="查看信息" data-options="iconCls:'icon-search',minimizable:false,closed:true,maximized:false" style="padding: 10px; width: auto; height: auto;">
+				<table id="showStuTable" style="border-collapse:collapse;margin:10px auto;" border="1" bordercolor="#a0c6e5">
+					<tbody>
+						<tr>
+							<td rowspan="5" style="width:20px;padding:7px;font-size:13px;background-color:aliceblue">在线查看</td>
+							<td>姓名<span class="red">*</span></td>
+							<td width="100px" id="namess"></td>
+							<td>请假类型</td>
+							<td width="100px" id="leaveTypes"></td>
+							<td>请假天数</td>
+							<td width="100px" id="leaveDates"></td>
+						</tr>
+						<tr>
+							<td>请假时间</td>
+							<td colspan="2" id="leaveTimes"></td>
+							<td>结束时间</td>
+							<td colspan="2" id="endTimes"></td>
+						</tr>
+						<tr>
+							<td>批注人</td>
+							<td width="100px" id="pName"></td>
+							<td>审批状态</td>
+							<td width="100px" colspan="3" id="isAgrees"></td>
+						</tr>
+						<tr>
+							<td>请假原因</td>
+							<td colspan="5" width="300px" height="40px" id="contents"></td>
+						</tr>
+						<tr>
+							<td>批注信息</td>
+							<td colspan="5" width="300px" height="40px" id="pContents"></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<!--编辑请假信息-->
+		<div id="updStu" class="easyui-window" title="批注请假" data-options="iconCls:'icon-edit',minimizable:false,closed:true,maximized:false" style="padding: 10px; width: auto; height: auto;">
+			<form id="editStuForm">
+				<input type="easyui-validatetimebox" name="id" id="idss" hidden="true" />
+				<input type="easyui-validatetimebox" name="pName" id="pNamess" hidden="true" />
+				<table id="showStuTable" style="border-collapse:collapse;margin:10px auto;" border="1" bordercolor="#a0c6e5">
+					<tbody>
+						<tbody>
+							<tr>
+								<td rowspan="4" style="width:20px;padding:7px;font-size:13px;background-color:aliceblue">在线查看</td>
+								<td>姓名<span class="red">*</span></td>
+								<td width="100px">
+									<input id="updname" name="name" readonly="true" class="easyui-textbox" data-options="required:true"></td>
+								</td>
+								<td>请假类型</td>
+								<td width="100px">
+									<select class="easyui-combobox" id="updleaveType" readonly="true" name="leaveType" editable="false" panelHeight="auto" style="width: 98%;">
+										<option value="病假">病假</option>
+										<option value="探亲">探亲</option>
+										<option value="产假">产假</option>
+										<option value="事假">事假</option>
+										<option value="婚假">婚假</option>
+										<option value="丧假">丧假</option>
+										<option value="公假">公假</option>
+										<option value="带薪">带薪</option>
+									</select>
+								</td>
+								<td>请假天数</td>
+								<td width="100px">
+									<input class="easyui-numberbox" readonly="true" id="updleaveDate" name="leaveDate" data-options="required:true,validType:'intPlus'">
+								</td>
+							</tr>
+							<tr>
+								<td>请假时间</td>
+								<td>
+									<input name="leaveTime" style="display: none; " readonly="true" id="updleaveTime" class="easyui-datetimebox">
+								</td>
+								<td>结束时间</td>
+								<td>
+									<input name="endTime" style="display: none; " readonly="true" id="updendTime" class="easyui-datetimebox">
+								</td>
+								<td>审批状态</td>
+								<td width="100px">
+									<select class="easyui-combobox" id="updisAgree" name="isAgree" editable="false" panelHeight="auto" style="width: 98%;">
+										<option value="审核中">审核中</option>
+										<option value="不准许">不准许</option>
+										<option value="准假">准假</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>请假原因</td>
+								<td colspan="5" width="300px">
+									<input name="content" id="updcontent" readonly="true" class="easyui-textbox" maxlength="140" data-options="multiline:true" style="border: medium none; width: 97%; height: 40px; resize: none; display: none;">
+								</td>
+							</tr>
+							<tr>
+								<td>批注信息</td>
+								<td colspan="5" width="300px">
+									<input name="pContent" id="updpContent" class="easyui-textbox" maxlength="140" data-options="multiline:true" style="border: medium none; width: 97%; height: 40px; resize: none; display: none;">
+								</td>
+							</tr>
+							<tr>
+								<td colspan="7" align="center">
+									<a id="" group="" href="#" class="easyui-linkbutton" iconcls="icon-save" onclick="updateStus()">
+										保存
+									</a>
+									<a id="" group="" href="#" class="easyui-linkbutton" iconcls="icon-cancel" onclick="javascript:$('#updStu').window('close')">
+										取消
+									</a>
+								</td>
+							</tr>
+						</tbody>
+				</table>
+			</form>
+		</div>
+
+		<!--
+            	作者：867647213@qq.com
+            	时间：2018-06-05
+            	描述：查看编辑我的请假信息
+            -->
+		<div id="myVacations" class="easyui-window" title="" data-options="iconCls:'icon-search',minimizable:false,closed:true," style="width:70%;height:450px;">
+			<table name="center" class="easyui-datagrid" id="myVacs" collapsible="true" style="width:100%; height:410px;overflow:auto" data-options="fitColumns:false,rownumbers:true,split:true,pagination:true,pageSize:10,singleSelect: true">
+
+			</table>
+		</div>
+
+		<!--
+            	作者：867647213@qq.com
+            	时间：2018-06-05
+            	描述：查看我的请假信息
+            -->
+
+		<div id="showMyVac" class="easyui-window" title="查看信息" data-options="iconCls:'icon-search',minimizable:false,closed:true,maximized:false" style="padding: 10px; width: auto; height: auto;">
+			<table id="showMyVacation" style="border-collapse:collapse;margin:10px auto;" border="1" bordercolor="#a0c6e5">
+				<tbody>
+					<tr>
+						<td rowspan="5" style="width:20px;padding:7px;font-size:13px;background-color:aliceblue">在线查看</td>
+						<td>姓名<span class="red">*</span></td>
+						<td width="100px" id="mynamess"></td>
+						<td>请假类型</td>
+						<td width="100px" id="myleaveTypes"></td>
+						<td>请假天数</td>
+						<td width="100px" id="myleaveDates"></td>
+					</tr>
+					<tr>
+						<td>请假时间</td>
+						<td colspan="2" id="myleaveTimes"></td>
+						<td>结束时间</td>
+						<td colspan="2" id="myendTimes"></td>
+					</tr>
+					<tr>
+						<td>批注人</td>
+						<td width="100px" id="mypName"></td>
+						<td>审批状态</td>
+						<td width="100px" colspan="3" id="myisAgrees"></td>
+					</tr>
+					<tr>
+						<td>请假原因</td>
+						<td colspan="5" width="300px" height="40px" id="mycontents"></td>
+					</tr>
+					<tr>
+						<td>批注信息</td>
+						<td colspan="5" width="300px" height="40px" id="mypContents"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!--
+            	作者：867647213@qq.com
+            	时间：2018-06-05
+            	描述：查看编辑我的请假信息
+            -->
+
+		<div id="myVac" class="easyui-window" title="我的请假信息" data-options="iconCls:'icon-search',minimizable:false,closed:true,maximized:false" style="padding: 10px; width: auto; height: auto;">
+			<form id="editStuForms">
+				<input type="easyui-validatetimebox" name="id" id="myid" hidden="true" />
+				<input type="easyui-validatetimebox" name="pName" id="mypNames" hidden="true" />
+				<table id="showMys" style="border-collapse:collapse;margin:10px auto;" border="1" bordercolor="#a0c6e5">
+					<tbody>
+						<tr>
+							<td rowspan="2" style="width:20px;padding:7px;font-size:13px;background-color:aliceblue">在线查看</td>
+							<td>姓名<span class="red">*</span></td>
+							<td width="100px">
+								<input id="myupdname" name="name" readonly="true" class="easyui-textbox" data-options="required:true"></td>
+							</td>
+							<td>请假类型</td>
+							<td width="100px">
+								<select class="easyui-combobox" id="myupdleaveType" name="leaveType" editable="false" panelHeight="auto" style="width: 98%;">
+									<option value="病假">病假</option>
+									<option value="探亲">探亲</option>
+									<option value="产假">产假</option>
+									<option value="事假">事假</option>
+									<option value="婚假">婚假</option>
+									<option value="丧假">丧假</option>
+									<option value="公假">公假</option>
+									<option value="带薪">带薪</option>
+								</select>
+							</td>
+							<td>请假天数</td>
+							<td width="100px">
+								<input class="easyui-numberbox" id="myupdleaveDate" name="leaveDate" data-options="required:true,validType:'intPlus'">
+							</td>
+						</tr>
+						<tr>
+							<td>请假原因</td>
+							<td colspan="5" width="300px">
+								<input name="content" id="myupdcontent" class="easyui-textbox" maxlength="140" data-options="multiline:true" style="border: medium none; width: 97%; height: 40px; resize: none; display: none;">
+							</td>
+						</tr>
+						<tr>
+							<td colspan="7" align="center">
+								<a id="" group="" href="#" class="easyui-linkbutton" iconcls="icon-save" onclick="myupdateStus()">
+									保存
+								</a>
+								<a id="" group="" href="#" class="easyui-linkbutton" iconcls="icon-cancel" onclick="javascript:$('#myVac').window('close')">
+									取消
+								</a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+		</div>
+
+		<script type="text/javascript" src="js/myjs/currentdate.js"></script>
+		<script type="text/javascript">
+			var now = getNow();
+			var chart = Highcharts.chart('container', {
+				chart: {
+					type: 'gauge',
+					plotBackgroundColor: null,
+					plotBackgroundImage: null,
+					plotBorderWidth: 0,
+					plotShadow: false,
+					height: 400
+				},
+				credits: {
+					enabled: false
+				},
+				title: {
+					text: 'HighCharts当前时间'
+				},
+				pane: {
+					background: [{}, {
+						backgroundColor: Highcharts.svg ? {
+							radialGradient: {
+								cx: 0.5,
+								cy: -0.4,
+								r: 1.9
+							},
+							stops: [
+								[0.5, 'rgba(255, 255, 255, 0.2)'],
+								[0.5, 'rgba(200, 200, 200, 0.2)']
+							]
+						} : null
+					}]
+				},
+				yAxis: {
+					labels: {
+						distance: -20
+					},
+					min: 0,
+					max: 12,
+					lineWidth: 0,
+					showFirstLabel: false,
+					minorTickInterval: 'auto',
+					minorTickWidth: 1,
+					minorTickLength: 5,
+					minorTickPosition: 'inside',
+					minorGridLineWidth: 0,
+					minorTickColor: '#666',
+					tickInterval: 1,
+					tickWidth: 2,
+					tickPosition: 'inside',
+					tickLength: 10,
+					tickColor: '#666',
+					title: {
+						text: 'Powered by<br/>Highcharts',
+						style: {
+							color: '#BBB',
+							fontWeight: 'normal',
+							fontSize: '8px',
+							lineHeight: '10px'
+						},
+						y: 10
+					}
+				},
+				tooltip: {
+					formatter: function() {
+						return this.series.chart.tooltipText;
+					}
+				},
+				series: [{
+					data: [{
+						id: 'hour',
+						y: now.hours,
+						dial: {
+							radius: '60%',
+							baseWidth: 4,
+							baseLength: '95%',
+							rearLength: 0
+						}
+					}, {
+						id: 'minute',
+						y: now.minutes,
+						dial: {
+							baseLength: '95%',
+							rearLength: 0
+						}
+					}, {
+						id: 'second',
+						y: now.seconds,
+						dial: {
+							radius: '100%',
+							baseWidth: 1,
+							rearLength: '20%'
+						}
+					}],
+					animation: false,
+					dataLabels: {
+						enabled: false
+					}
+				}]
+			}, function(chart) {
+				setInterval(function() {
+					now = getNow();
+					var hour = chart.get('hour'),
+						minute = chart.get('minute'),
+						second = chart.get('second'),
+						// run animation unless we're wrapping around from 59 to 0
+						animation = now.seconds === 0 ?
+						false : {
+							easing: 'easeOutElastic'
+						};
+					chart.tooltipText =
+						pad(Math.floor(now.hours), 2) + ':' +
+						pad(Math.floor(now.minutes * 5), 2) + ':' +
+						pad(now.seconds * 5, 2);
+					hour.update(now.hours, true, animation);
+					minute.update(now.minutes, true, animation);
+					second.update(now.seconds, true, animation);
+				}, 1000);
+			});
+			$.extend($.easing, {
+				easeOutElastic: function(x, t, b, c, d) {
+					var s = 1.70158;
+					var p = 0;
+					var a = c;
+					if(t == 0) return b;
+					if((t /= d) == 1) return b + c;
+					if(!p) p = d * .3;
+					if(a < Math.abs(c)) {
+						a = c;
+						var s = p / 4;
+					} else var s = p / (2 * Math.PI) * Math.asin(c / a);
+					return a * Math.pow(2, -10 * t) * Math.sin((t * d - s) * (2 * Math.PI) / p) + c + b;
+				}
+			});
+		</script>
+	</body>
+
+</html>

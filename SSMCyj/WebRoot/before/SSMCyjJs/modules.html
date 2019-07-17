@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>模块管理</title>
+		<link rel="icon" href="img/timg.jpg">
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/icon.css" />
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/default/easyui.css" />
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/jscript" src="js/easyUIvalidate.js"></script>
+		<!-- 复选框-->
+		<script>
+			var token = window.localStorage.getItem("token"); //取出暂存的token数据
+			var roleId = window.localStorage.getItem("roleIds"); // 登录用户拥有的角色
+			$(function() {
+				$('#tg').treegrid({
+					url: 'http://localhost:8080/SSMCyj/modules/getModules.php?token=' + token,
+					method: 'post',
+					lines: true,
+					animate: true,
+					toolbar: '#toolbar',
+					rownumbers: true,
+					singleSelect: false,
+					fitColumns: true,
+					idField: 'id',
+					treeField: 'text',
+				});
+				handlePermission();
+
+			});
+
+			function handlePermission() {
+				console.log('权限控制插件data-require-permission.js加载成功!');
+				let permission = window.localStorage.getItem("permission"); //从session缓存中取出权限数组
+				console.log("权限控制插件permission=>" + permission);
+				$("*[data-require-permission]").map((i, ele) => {
+					let elePer = $(ele).attr('data-require-permission');
+					console.log("elePer=>" + elePer);
+
+					let p = permission.split(",");
+
+					let requireRemove = true;
+
+					for(var i = 0; i < p.length; i++) {
+						if(elePer == p[i]) requireRemove = false;
+					}
+					if(requireRemove) {
+						$(ele).remove()
+					};
+				});
+			}
+			
+			//查询
+			function doSearch() {
+				$('#tg').treegrid('load', {
+					token: token
+				});
+			}
+		</script>
+
+	</head>
+
+	<body style="background: url(img/xingk2.jpg) no-repeat; background-size: 100% 710px">
+
+		<table id="tg" name="center" class="easyui-treegrid" style="height:590px;overflow:auto" collapsible="true" title="模块列表" toolbar="#toolbar" idField="id" rownumbers="true" fitColumns="true">
+			<thead>
+				<tr>
+					<th data-options="field:'text'" width="300">菜单名称</th>
+					<th data-options="field:'id'" width="80">菜单id</th>
+					<th data-options="field:'parentId',hidden:true" width="80">父菜单id</th>
+					<th data-options="field:'founder'" width="80">创建人</th>
+					<th data-options="field:'createTime'" width="250">创建时间</th>
+					<th data-options="field:'updateMan'" width="80">修改人</th>
+					<th data-options="field:'lastUpdateTime'" width="250">修改时间</th>
+				</tr>
+			</thead>
+		</table>
+
+		<div id="toolbar" style="background: url(img/xingk1.jpg);">
+			<div id="tb" style="margin-bottom:5px">
+				<from id="sousuo" method="post">
+					模块名称: <input class="easyui-textbox" id="namess" name="name" style="width:80px">
+					<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="javascript:doSearch()">查询</a>
+				</from>
+			</div>
+			<a href="javascript:void(0)" data-require-permission='modules:addModules.php' class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="newUser()">添加菜单</a>
+			<a href="javascript:void(0)" data-require-permission='modules:updModules.php' class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="editUser()">编辑菜单</a>
+			<a href="javascript:void(0)" data-require-permission='modules:delModules.php' class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="deleteUser()">删除菜单</a>
+		</div>
+
+		<div id="dlg" class="easyui-dialog" style="width:400px;height:300px;padding:10px 20px;background: url(img/beijing.jpg) no-repeat; background-size: 100% 100%;" closed="true" buttons="#dlg-buttons">
+			<form id="fm" method="post">
+				<table cellspacing="10px;">
+					<tr>
+						<td>父亲菜单parentId：</td>
+						<td><input id="parentId" name="parentId" class="easyui-validatebox" required="true" readonly="true" style="width: 200px;"></td>
+					</tr>
+					<tr>
+						<td>菜单名称：</td>
+						<td><input id="name" name="name" class="easyui-validatebox" data-options="validType:'name'" required="true" style="width: 200px;"></td>
+					</tr>
+					<tr>
+						<td>菜单路径：</td>
+						<td><input id="path" name="path" class="easyui-validatebox" style="width: 200px;"></td>
+					</tr>
+					<tr>
+						<td>菜单权重：</td>
+						<td><input id="weight" name="weight" class="easyui-validatebox" data-options="validType:'intPlus'" style="width: 200px;"></td>
+					</tr>
+					<tr>
+						<td>创建人：</td>
+						<td><input id="founder" name="founder" class="easyui-validatebox" data-options="validType:'name'" required="true" style="width: 200px;"></td>
+					</tr>
+				</table>
+			</form>
+		</div>
+
+		<div id="dlg-buttons" style="background: url(img/xingk1.jpg) no-repeat; background-size: 100% 100%;">
+			<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="saveUser()">保存</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:$('#dlg').dialog('close')">关闭</a>
+		</div>
+
+		<div id="dlgs" class="easyui-dialog" style="width:400px;height:300px;padding:10px 20px;background: url(img/beijing.jpg) no-repeat; background-size: 100% 100%;" closed="true" buttons="#dlg-buttonss">
+			<form id="fms" method="post">
+				<table cellspacing="10px;">
+					<tr>
+						<!-- 菜单id -->
+						<td><input name="id" class="easyui-validatebox" readonly="true" hidden="true" style="width: 200px;"></td>
+					</tr>
+					<tr>
+						<td>父亲菜单parentId：</td>
+						<td><input id="parentId" name="parentId" class="easyui-validatebox" required="true" readonly="true" style="width: 200px;"></td>
+					</tr>
+					<tr>
+						<td>菜单名称：</td>
+						<td><input id="names" name="name" class="easyui-validatebox" data-options="validType:'name'" required="true" style="width: 200px;"></td>
+					</tr>
+					<tr>
+						<td>菜单路径：</td>
+						<td><input id="path" name="path" class="easyui-validatebox" style="width: 200px;"></td>
+					</tr>
+					<tr>
+						<td>菜单权重：</td>
+						<td><input id="weight" name="weight" class="easyui-validatebox" data-options="validType:'intPlus'" style="width: 200px;"></td>
+					</tr>
+					<tr>
+						<td>修改人：</td>
+						<td><input id="updateMan" name="updateMan" class="easyui-validatebox" data-options="validType:'name'" required="true" style="width: 200px;"></td>
+					</tr>
+				</table>
+			</form>
+		</div>
+
+		<div id="dlg-buttonss" style="background: url(img/xingk1.jpg) no-repeat; background-size: 100% 100%;">
+			<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="saveUsers()">保存</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:$('#dlgs').dialog('close')">关闭</a>
+		</div>
+
+		<script type="text/javascript">
+			//新增一个菜单
+			function newUser() {
+				$('#fm').form('clear'); //清空表单
+				var row = $('#tg').treegrid('getSelected'); //获取选中的父菜单
+				if(row) {
+					$("#dlg").dialog('open').dialog('setTitle', '添加' + row.text + '的子菜单');
+					$('#fm').form('load', {
+						parentId: row.id
+					}); //菜单parentid设置为选中的菜单
+					url = 'http://localhost:8080/SSMCyj/modules/addModules.php?token='+token;
+				} else {
+					$.messager.confirm('新增确认', '请选中一个父菜单,否则将新增一个根菜单。您是否要新增一个根菜单？', function(r) {
+						if(r) {
+							$("#dlg").dialog('open').dialog('setTitle', '添加根菜单');
+							$('#fm').form('load', {
+								parentId: 0
+							}); //菜单parentid设置为0,则为根菜单
+							url = 'http://localhost:8080/SSMCyj/modules/addModules.php?token='+token;
+						}
+					});
+				}
+
+			}
+
+			//保存新增菜单对象
+			function saveUser() {
+				var row = $('#tg').treegrid('getSelected'); //获取选中的父菜单
+				$.messager.confirm('保存确认', '您确定要保存么？', function(r) {
+					if(r) {
+						var formData = $('#fm').serialize();
+						var boo = $('#fm').form('validate');
+						if(boo) {
+							$.ajax({
+								type: "POST",
+								url: url,
+								cache: false,
+								data: formData,
+								dataType: "json",
+								success: function(result) {
+									$.messager.alert({
+										title: '系统提示',
+										msg: result.message,
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 3000,
+										//显示时间
+										fn: function() {
+											$('#fms').form('clear');
+											window.top.loadTree();
+										}
+									});
+									$('#dlg').dialog('close');
+									$('#tg').treegrid('reload');
+								},
+								error: function(result) {
+									$.messager.alert({
+										title: '系统提示',
+										msg: result.message,
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 3000
+										//显示时间
+									});
+									$('#tg').treegrid('reload');
+									return;
+								}
+							});
+						}
+					}
+				});
+
+			}
+
+			//修改一个菜单
+			function editUser() {
+				$('#fms').form('clear'); //清空表单
+				//			var row=$('#tg').treegrid('getSelected');//获取选中的菜单
+				var rows = $('#tg').treegrid('getSelections'); //获取被选中的菜单
+				var leng = rows.length;
+				console.log("leng=>" + leng);
+				if(leng == 1) {
+					var row = rows[0];
+					//			console.log(JSON.stringify(row));
+					$("#dlgs").dialog('open').dialog('setTitle', '修改' + row.text + '菜单');
+					$("#names").val(row.text);
+					$('#fms').form('load', row); //菜单内容
+					url = 'http://localhost:8080/SSMCyj/modules/updModules.php?token=' + token;
+				} else {
+					$.messager.alert("系统提示", "请选中一个你要修改的数据");
+				}
+			}
+
+			//保存修改的菜单对象
+			function saveUsers() {
+				var row = $('#tg').treegrid('getSelected'); //获取选中的父菜单
+				$.messager.confirm('保存确认', '您确定要保存么？', function(r) {
+					if(r) {
+						var formData = $('#fms').serialize();
+						var boo = $('#fms').form('validate');
+						if(boo) {
+							$.ajax({
+								type: "POST",
+								url: url,
+								cache: false,
+								data: formData,
+								dataType: "json",
+								success: function(result) {
+									$.messager.alert({
+										title: '系统提示',
+										msg: result.message,
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 3000,
+										//显示时间
+										fn: function() {
+											window.top.loadTree();
+										}
+									});
+									$('#dlgs').dialog('close');
+									$('#tg').treegrid('reload');
+								},
+								error: function(result) {
+									$.messager.alert({
+										title: '系统提示',
+										msg: result.message,
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 3000
+										//显示时间
+									});
+									$('#tg').treegrid('reload');
+									return;
+								}
+							});
+						}
+
+					}
+				});
+
+			}
+		</script>
+		<!--删除-->
+		<script>
+			//点击删除按钮
+			function deleteUser() {
+				var nodes = $('#tg').treegrid('getSelected');
+
+				var row = $('#tg').treegrid('getSelections');
+
+				var rows = [];
+				for(var i = 0; i < row.length; i++) {
+					rows.push(row[i].id)
+				}
+
+				if(nodes.text == "") {
+					$.messager.show({
+						title: '提示信息',
+						msg: '请选择父节点',
+						showType: 'show'
+					});
+				} else {
+					$.messager.confirm('删除', '你确定要删除其节点吗？', function(res) {
+						if(res) {
+							$.post("http://localhost:8080/SSMCyj/modules/delModules.php", {
+								id: rows,
+								token: token
+							}, function(res) {
+								if(res.success) {
+									$.messager.alert({
+										title: '系统提示',
+										msg: res.message,
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 1000,
+										//显示时间
+										fn: function() {
+											window.top.loadTree();
+										}
+									});
+									$('#tg').treegrid('reload');
+								} else {
+									$.messager.alert({
+										title: '系统提示',
+										msg: res.message,
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 1000
+										//显示时间
+									});
+									$('#tg').treegrid('reload');
+								}
+							}, "json");
+						}
+					});
+
+				}
+			}
+		</script>
+
+	</body>
+
+</html>

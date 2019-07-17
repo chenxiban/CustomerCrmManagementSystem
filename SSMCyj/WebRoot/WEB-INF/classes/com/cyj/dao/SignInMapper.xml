@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cyj.dao.SignInDao">
+
+	<select id="getSignIn" parameterType="com.cyj.entity.SignIn"
+		resultMap="Allsign">
+		SELECT
+		*
+		FROM
+		signin s LEFT JOIN users u ON s.userId=u.id
+		<where>
+			<if test=" loginName != null and loginName !='' ">AND loginName LIKE "%"#{loginName}"%"</if>
+			<if test=" signState != null and signState !='' ">AND signState LIKE "%"#{signState}"%"</if>
+			<if
+				test=" birthStart != null and birthStart != '' and birthEnd != null and birthEnd != '' ">
+				AND signTime BETWEEN #{birthStart} AND #{birthEnd}
+			</if>
+		</where>
+		LIMIT #{startIndex},#{rows}
+	</select>
+
+	<select id="getSinByAskerName" parameterType="String"
+		resultType="signIn">
+		SELECT signState FROM signin WHERE signTime LIKE
+		"%"#{signTime}"%"
+		AND userId IN
+		(SELECT id FROM users WHERE loginName IN
+		(SELECT askerName FROM askers WHERE askerName=#{askerName}))
+	</select>
+
+	<select id="getSign" parameterType="signIn" resultMap="Allsign">
+		SELECT
+		id,userId,signState,signTime,signOutTime,lastUpdateTime,signStar,signStars
+		FROM
+		signin WHERE userId=#{userId}
+		<if test="signTime != null ">
+			AND signTime LIKE "%"#{signTime}"%"
+		</if>
+	</select>
+
+	<select id="getSignInBySign" parameterType="com.cyj.entity.SignIn"
+		resultType="java.lang.Integer">
+		SELECT COUNT(id) FROM signin
+		WHERE userId IN (SELECT id FROM users WHERE
+		loginName=#{loginName})
+		<if test="kqYue != null and kqYue !='' ">
+			AND signTime LIKE "%"#{kqYue}"%"
+		</if>
+		<if test="signState != null and signState !='' ">
+			AND signState=#{signState}
+		</if>
+		<if test="signStar != null and signStar !='' ">
+			AND signStar=#{signStar}
+		</if>
+		<if test="signStars != null and signStars !='' ">
+			AND signStars=#{signStars}
+		</if>
+	</select>
+
+	<select id="getSignInCount" parameterType="com.cyj.entity.SignIn"
+		resultType="java.lang.Integer">
+		SELECT
+		COUNT(*)
+		FROM
+		signin s LEFT JOIN users u ON s.userId=u.id
+		<where>
+			<if test=" loginName != null and loginName !='' ">AND loginName LIKE "%"#{loginName}"%"</if>
+			<if test=" signState != null and signState !='' ">AND signState LIKE "%"#{signState}"%"</if>
+			<if
+				test=" birthStart != null and birthStart != '' and birthEnd != null and birthEnd != '' ">
+				AND signTime BETWEEN #{birthStart} AND #{birthEnd}
+			</if>
+		</where>
+	</select>
+
+	<select id="getSignInByTime" parameterType="String" resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM signin WHERE signTime LIKE "%"#{signTime}"%"
+		AND
+		signState IN
+		<foreach collection="signState" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</select>
+
+	<!-- 5-28修改 -->
+	<update id="updSignIn" parameterType="signIn">
+		UPDATE signin
+		<trim suffix="" suffixOverrides="," prefix="SET" prefixOverrides="">
+			<if test="signState !=null and signState !=''">
+				signState=#{signState},
+			</if>
+			<if test="signTime !=null ">
+				signTime=#{signTime},
+			</if>
+			<if test="signOutTime !=null ">
+				signOutTime=#{signOutTime},
+			</if>
+			<if test="signOutTime ==null ">
+				signOutTime=null,
+			</if>
+			<if test="signStar !=null and signStar !='' ">
+				signStar=#{signStar},
+			</if>
+			<if test="signStars !=null and signStars !='' ">
+				signStars=#{signStars},
+			</if>
+		</trim>
+
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="id != 0">
+				and id=#{id}
+			</if>
+		</trim>
+
+	</update>
+
+	<update id="updSignInTime" parameterType="signIn">
+		UPDATE signin
+		<trim suffix="" suffixOverrides="," prefix="SET" prefixOverrides="">
+			<if test="signState !=null and signState !=''">
+				signState=#{signState},
+			</if>
+			<if test="signTime ==null ">
+				signTime=NULL,
+			</if>
+			<if test="signOutTime ==null ">
+				signOutTime=NULL,
+			</if>
+		</trim>
+
+	</update>
+
+	<insert id="addSignIn">
+		INSERT INTO signin
+		(userId,signState,signTime,signOutTime,signStars)
+		VALUES
+		(#{userId},#{signState},#{signTime},#{signOutTime},#{signStars})
+	</insert>
+
+	<resultMap type="signIn" id="Allsign">
+		<id property="id" column="id" />
+		<result property="userId" column="userId" />
+		<result property="signState" column="signState" />
+		<result property="signTime" column="signTime" />
+		<result property="signOutTime" column="signOutTime" />
+		<result property="lastUpdateTime" column="lastUpdateTime" />
+		<result property="loginName" column="loginName" />
+		<result property="signStar" column="signStar" />
+		<result property="signStars" column="signStars" />
+	</resultMap>
+
+</mapper>

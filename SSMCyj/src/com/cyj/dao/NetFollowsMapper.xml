@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cyj.dao.NetFollowsDao">
+	<select id="getNetFollows" parameterType="com.cyj.entity.NetFollows"
+		resultType="netFollows">
+		SELECT
+		*
+		FROM
+		netfollows
+		<where>
+			<if test=" studentId != 0 ">
+				AND studentId=#{studentId}
+			</if>
+			<if test=" studentName != null and studentName !='' ">
+				AND studentName LIKE "%"#{studentName}"%"
+			</if>
+			<if test=" followType != null and followType !='' ">
+				AND followType LIKE "%"#{followType}"%"
+			</if>
+			<if test=" followState != null and followState !='' ">
+				AND followState LIKE "%"#{followState}"%"
+			</if>
+			<if test=" userId != 0 ">
+				AND userId=#{userId}
+			</if>
+			<if test=" birthStart != null and birthStart != '' and birthEnd != null and birthEnd != '' ">
+				AND followTime BETWEEN #{birthStart} AND #{birthEnd}
+			</if>
+		</where>
+		LIMIT #{startIndex},#{rows}
+	</select>
+
+	<select id="getNetFollowsCount" parameterType="com.cyj.entity.NetFollows"
+		resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM netfollows
+		<where>
+			<if test=" studentId != 0 ">
+				AND studentId=#{studentId}
+			</if>
+			<if test=" studentName != null and studentName !='' ">
+				AND studentName LIKE "%"#{studentName}"%"
+			</if>
+			<if test=" followType != null and followType !='' ">
+				AND followType LIKE "%"#{followType}"%"
+			</if>
+			<if test=" followState != null and followState !='' ">
+				AND followState LIKE "%"#{followState}"%"
+			</if>
+			<if test=" userId != 0 ">
+				AND userId=#{userId}
+			</if>
+			<if test=" birthStart != null and birthStart != '' and birthEnd != null and birthEnd != '' ">
+				AND followTime BETWEEN #{birthStart} AND #{birthEnd}
+			</if>
+		</where>
+	</select>
+	
+	<insert id="addNetFollows" parameterType="com.cyj.entity.NetFollows" useGeneratedKeys="true"
+		keyColumn="id">
+		INSERT INTO netfollows
+		(studentId,studentName,followTime,nextFollowTime,content,userId,followType,createTime,followState)
+		VALUES
+		(#{studentId},#{studentName},#{followTime},#{nextFollowTime},#{content},#{userId},#{followType},#{createTime},#{followState})
+	</insert>
+
+</mapper>

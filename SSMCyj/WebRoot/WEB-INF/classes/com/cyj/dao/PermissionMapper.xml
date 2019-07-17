@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cyj.dao.PermissionDao">
+
+
+	<select id="queryAll" resultType="java.lang.String">
+		SELECT permissionValue FROM
+		permission
+	</select>
+
+
+	<insert id="batchInsert" parameterType="list">
+		INSERT INTO
+		permission(permissionValue,permissionModule,permissionName) VALUES
+
+		<foreach collection="list" item="permission" separator=",">
+			(#{permission.permissionValue},#{permission.permissionModule},#{permission.permissionName})
+		</foreach>
+
+	</insert>
+
+	<select id="queryNode" resultMap="permissionNodeMap">
+		SELECT * FROM permission
+	</select>
+
+	<select id="queryPermissionIdsByRoleIds" parameterType="list"
+		resultType="int">
+		SELECT permissionId FROM rolepermission
+		<where>
+			<if test=" roleIds != null ">
+				roleId IN
+				<foreach item="id" collection="roleIds" open="(" separator=","
+					close=")">
+					#{id}
+				</foreach>
+			</if>
+		</where>
+	</select>
+
+	<delete id="deleteRolePermissionByRoleId" parameterType="int">
+		DELETE FROM rolepermission WHERE roleId = #{roleId}
+	</delete>
+
+	<insert id="setRolePermission">
+		INSERT INTO rolepermission (roleId,permissionId) VALUES
+		<foreach collection="permissionIds" item="permissionId"
+			separator=",">
+			(#{roleId},#{permissionId})
+		</foreach>
+	</insert>
+
+
+	<resultMap type="node" id="permissionNodeMap">
+		<result property="text" column="permissionModule" />
+		<collection property="children" ofType="node">
+			<id property="id" column="permissionId" />
+			<result property="text" column="permissionName" />
+			<result property="permissionLastUpdateTime" column="permissionLastUpdateTime" />
+		</collection>
+	</resultMap>
+
+
+
+
+
+
+
+
+</mapper>

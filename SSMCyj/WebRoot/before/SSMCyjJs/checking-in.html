@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>员工考勤自助查询</title>
+		<link rel="icon" href="img/timg.jpg">
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/icon.css" />
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/default/easyui.css" />
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/jscript" src="js/jquery.edatagrid.js"></script>
+		<script type="text/jscript" src="js/easyUIvalidate.js"></script>
+		<style>
+			.datagrid-td-rownumber {
+				height: 26px;
+			}
+		</style>
+		<script type="text/javascript">
+			var token = window.localStorage.getItem("token"); //取出暂存的token数据
+			var loginIds = window.localStorage.getItem("loginId"); // 登录用户的id
+			var loginNames = window.localStorage.getItem("loginName"); // 登录用户的名称
+			var roleId = window.localStorage.getItem("roleIds"); // 登录用户拥有的角色
+
+			$(function() {
+				$('#name').html(loginNames);
+
+				$.post('http://localhost:8080/SSMCyj/vacation/getCheckingIn.php', {
+					token: token,
+					loginName: loginNames
+				}, function(res) {
+					if(res.success) {
+						$('#zt').html(res.message.zt);
+						$('#cd').html(res.message.cd);
+						$('#zc').html(res.message.zc);
+						$('#bj').html(res.message.bj);
+						$('#lq').html(res.message.lq);
+						$('#sj').html(res.message.sj);
+					}
+				}, 'json')
+			});
+
+			//表单序列化以后去掉表单中值为空的参数
+			function serializeNotNull(serStr) {
+				return serStr.split("&").filter(function(str) {
+					return !str.endsWith("=")
+				}).join("&");
+			}
+
+			//导出选中的学生记录到excel表中
+			function downloadInfo() {
+
+				$.messager.confirm('确认', '您确认导出么？', function(r) {
+					if(r) {
+						window.location.href = "http://localhost:8080/SSMCyj/vacation/download.php?token=" + token + "&loginNames=" + encodeURI(encodeURI(loginNames));
+					}
+				});
+			}
+			
+			function doSearch() {
+				$.post('http://localhost:8080/SSMCyj/vacation/getCheckingIn.php', {
+					token: token,
+					userId: loginIds,
+					loginName: loginNames,
+					kqYue: $('#s_bbirthday').datebox('getValue')
+				}, function(res) {
+					if(res.success) {
+						$('#zt').html(res.message.zt);
+						$('#cd').html(res.message.cd);
+						$('#zc').html(res.message.zc);
+						$('#bj').html(res.message.bj);
+						$('#lq').html(res.message.lq);
+						$('#sj').html(res.message.sj);
+					}
+				}, 'json')
+
+			}
+		</script>
+
+	</head>
+
+	<body style="background: url(img/xingk2.jpg) no-repeat; background-size: 100% 710px">
+
+		<table name="center" class="easyui-datagrid" id="dg" toolbar="#toolbar" title="考勤报表" collapsible="true" style="width:100%; height:500px;overflow:auto" data-options="split:true">
+
+		</table>
+
+		<div id="toolbar" style="padding:5px; height:auto;background-color: white;background: url(img/main3.jpg) no-repeat; background-size: 100% 470px">
+			<div id="tb" style="margin-bottom:5px">
+				<table id="showStuTable" style="border-collapse:collapse;margin:10px auto;width: 100%;font-weight: bolder;" border="1" bordercolor="#a0c6e5">
+					<tbody>
+						<tr height="40px">
+							<td width="10%" style="text-align: center;">查看的日期</td>
+							<td width="35%">
+								<input class="easyui-datebox" style="width: 40%;" name="s_bbirthday" id="s_bbirthday" size="11" editable="false" /> &nbsp;&nbsp;
+								<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="javascript:doSearch()">查询</a>
+							</td>
+							<td width="10%" style="text-align: center;">
+								<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-edit'" onclick="javascript:downloadInfo()">导出Excel</a>
+							</td>
+							<td>
+
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div style="width: 100%; text-align: center;">
+				<h2>考勤情况统计</h2>
+			</div>
+
+			<hr />
+
+			<div style="height: 350px;">
+				<table id="showSignKao" style="border-collapse:collapse;margin:10px auto;width: 85%;" border="1" bordercolor="#a0c6e5">
+					<tbody style="text-align: center; font-weight: bolder;">
+						<tr height="40px">
+							<td rowspan="3" width="150px">姓名</td>
+							<td colspan="6" width="660px">考勤情况</td>
+							<td rowspan="3" width="150px">备注</td>
+						</tr>
+						<tr height="40px">
+							<td rowspan="2">迟到(次)</td>
+							<td rowspan="2">早退(次)</td>
+							<td rowspan="2">病假(天)</td>
+							<td rowspan="2">事假(天)</td>
+							<td rowspan="2">漏签(次/未正常签到)</td>
+							<td rowspan="2">正常签到/退(次)</td>
+						</tr>
+						<tr height="40px">
+
+						</tr>
+						<tr height="40px">
+							<td id="name"></td>
+							<td id="cd">0</td>
+							<td id="zt">0</td>
+							<td id="bj">0</td>
+							<td id="sj">0</td>
+							<td id="lq">0</td>
+							<td id="zc">0</td>
+							<td colspan="2">其他带薪假(年假)</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+		</div>
+
+	</body>
+
+</html>

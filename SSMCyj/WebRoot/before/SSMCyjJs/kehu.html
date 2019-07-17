@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>客户商家</title>
+		<link rel="icon" href="img/timg.jpg">
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/icon.css" />
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/default/easyui.css" />
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/jscript" src="js/jquery.edatagrid.js"></script>
+		<script type="text/jscript" src="js/easyUIvalidate.js"></script>
+		<style>
+			.datagrid-td-rownumber {
+				height: 26px;
+			}
+			#toolbar{
+				background-image: url(img/xingk1.jpg);
+			}
+			#yh{
+				background: url(img/xingk2.jpg) no-repeat;
+				background-size:100% 700px;
+			}
+			#sz-window{
+				background: url(img/xingk2.jpg) no-repeat;
+			}
+		</style>
+		
+		<script type="text/javascript">
+			var token = window.localStorage.getItem("token"); //取出暂存的token数据
+			var loginIds = window.localStorage.getItem("loginId"); // 登录用户的id
+			var loginNames = window.localStorage.getItem("loginName"); // 登录用户的名称
+			$(function() {
+
+				$("#dg").edatagrid({ //为了加载小图标
+					url: 'http://localhost:8080/SSMCyj/users/getUsers.php',
+					saveUrl: "http://localhost:8080/SSMCyj/users/addUsers.php?token=" + token,
+					updateUrl: "http://localhost:8080/SSMCyj/users/updUsers.php?token=" + token,
+					destroyUrl: "http://localhost:8080/SSMCyj/users/delUsers.php?token=" + token,
+					queryParams: { //datagrid的固定参数
+						token: token //必传
+					},
+					onLoadSuccess: function() {
+						$(".easyui-linkbutton").linkbutton();
+						handlePermission();
+					}
+				});
+				/**
+				 * 页面加载完成自动执行
+				 * 使用权限控制元素的访问
+				 */
+				//handlePermission();
+
+			});
+
+			function handlePermission() {
+				console.log('权限控制插件data-require-permission.js加载成功!');
+				let permission = window.localStorage.getItem("permission"); //从session缓存中取出权限数组
+				console.log("权限控制插件permission=>" + permission);
+				$("*[data-require-permission]").map((i, ele) => {
+					let elePer = $(ele).attr('data-require-permission');
+					console.log("elePer=>" + elePer);
+
+					let p = permission.split(",");
+
+					let requireRemove = true;
+
+					for(var i = 0; i < p.length; i++) {
+						if(elePer == p[i]) requireRemove = false;
+					}
+					if(requireRemove) {
+						$(ele).remove();
+					};
+				});
+			}
+
+			function serializeNotNull(serStr) {
+				return serStr.split("&").filter(
+					function(str) {
+						return !str.endsWith("=")
+					}).join("&");
+			}
+
+			//查询
+			function doSearch() {
+				var birthStart = $('#s_bbirthday').datebox('getValue');
+				var birthEnd = $('#s_ebirthday').datebox('getValue');
+				var boo = $('#sousuo').form('validate');
+				if(boo) {
+					$('#dg').datagrid('load', {
+						token: token,
+						loginName: $("#loginName").val(),
+						protectEMail: $("#protectEMail").val(),
+						protectMTel: $("#protectMTel").val(),
+						birthStart: birthStart,
+						birthEnd: birthEnd,
+						isLookout: $("#isLookout").combobox('getValue')
+					});
+				}
+			}
+
+			//格式化显示是否锁定
+			function formatterIsLockout(value, row, index) {
+				return value == "是" ? "是" : "否";
+			}
+
+			//设置角色权限
+			/*function formatterSetRole(value, row, index) {
+				return "<a class='easyui-linkbutton' iconCls='icon-tip' style='cursor: pointer;' onclick='showRoles(" +
+					index + ")'>设置</a>";
+			}*/
+			var uid;
+
+			function showRoles(index) {
+				var data = $("#dg").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+
+				uid = row.id;
+				$("#zb").datagrid({
+					url: 'http://localhost:8080/SSMCyj/roles/getRolesList.php',
+					singleSelect: true, //是否可以多选
+					rownumbers: true, //是否出现行数
+					fitColumns: true, //是否出现滚动条
+					queryParams: {
+						token: token,
+						id: uid
+					}
+				});
+
+				$("#yb").datagrid({
+					url: 'http://localhost:8080/SSMCyj/roles/getUserRolesByUserId.php',
+					singleSelect: false, //是否可以多选
+					rownumbers: true, //是否出现行数
+					fitColumns: true, //是否出现滚动条
+					queryParams: {
+						token: token,
+						id: uid
+					}
+				});
+
+				$("#sz-window").window({
+					title: '您正在设置' + row.loginName + '的角色信息'
+				});
+
+				$("#sz-window").window('open');
+
+			}
+			//添加
+			function addTian() {
+				var rows = $('#dg').datagrid("getSelected");
+				var row = $('#zb').datagrid("getSelected");
+				var rname = row.name;
+				var aname = rows.loginName;
+				if(row) {
+					var rid = row.id;
+					if(row.name == "咨询师" || row.name == "网络咨询师" || row.name == "咨询师经理") {
+						$.post("http://localhost:8080/SSMCyj/askers/addAskers.php", {
+							token: token,
+							roleName: rname,
+							askerName: aname
+						}, function() {
+
+						});
+					}
+
+					$.messager.confirm('确认', '您确认要为该用户设置当前角色信息么？', function(r) {
+						if(r) {
+							$.post('http://localhost:8080/SSMCyj/roles/addUserRoles.php', {
+								token: token,
+								userId: uid,
+								id: loginIds,
+								roleId: rid
+							}, function(res) {
+								if(res) {
+									window.localStorage.setItem("roleIds", res.message.roleIds);
+									window.localStorage.setItem("permission", res.message.permission);
+									window.top.loadTree();
+									$.messager.alert({
+										title: '添加成功',
+										msg: '角色添加成功-:' + row.name,
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 3000
+										//显示时间
+									});
+									$("#zb").datagrid("reload");
+									$("#yb").datagrid("reload");
+								} else {
+									$.messager.alert("提示消息", res.message);
+								}
+							}, "json");
+						}
+					});
+				} else {
+					$.messager.alert("提示消息", "没有选择任何行");
+				}
+			}
+
+			//删除
+			function deleteYi() {
+				var arow = $('#dg').datagrid("getSelected");
+				var row = $('#yb').datagrid('getSelections');
+
+				var arows = [];
+				for(var i = 0; i < row.length; i++) {
+					arows.push(row[i].name);
+					if(arows == "咨询师" || arows == "网络咨询师" || arows == "咨询师经理") {
+						$.post("http://localhost:8080/SSMCyj/askers/delAsker.php", {
+							token: token,
+							askerName: arow.loginName
+						}, function() {
+
+						}, "json");
+					}
+				}
+
+				var rows = [];
+				for(var i = 0; i < row.length; i++) {
+					rows.push(row[i].id)
+				}
+
+				if(row) {
+					$.messager.confirm('确认', '您确认想要移除该用户当前角色信息么？', function(r) {
+						if(r) {
+							$.post('http://localhost:8080/SSMCyj/roles/delUserRoles.php', {
+								token: token,
+								userId: uid,
+								id: loginIds,
+								roleId: rows
+							}, function(res) {
+								if(res) {
+									window.localStorage.setItem("roleIds", res.message.roleIds);
+									window.localStorage.setItem("permission", res.message.permission);
+									window.top.loadTree();
+									$.messager.alert({
+										title: '删除成功',
+										msg: '角色删除成功',
+										timeout: 3000, //推出时间
+										showType: 'slide', //动画效果
+										showSpeed: 3000
+									});
+									$("#zb").datagrid("reload");
+									$("#yb").datagrid("reload");
+								} else {
+									$.messager.alert("提示消息", "删除失败");
+								}
+							}, "json");
+						}
+					});
+				} else {
+					$.messager.alert("提示消息", "没有选择任何行");
+				}
+			}
+
+			function resetPassword(index) {
+				var data = $("#dg").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+				//弹出用户确认框
+				if(row.loginName == loginNames) {
+					$.messager.confirm('确认', '重置当前登录用户的密码,将返回登录页面重新登录,是否继续重置密码？', function(r) {
+						if(r) { // 用户点击了确认按钮
+							//真正执行重置的代码……
+							$.post("http://localhost:8080/SSMCyj/users/clearUsers.php", {
+								id: row.id,
+								loginName: row.loginName,
+								token: token
+							}, function(lock) {
+								var lock = eval("(" + lock + ")"); //你知道这里可以如何修改从而变得更简单么？                 
+								if(lock) {
+									$.messager.alert({
+										title: '提示信息',
+										msg: '重置后的密码为cyj666,将返回登录页面重新登录!',
+										showType: 'show',
+										fn: function() {
+											window.parent.loginOut();
+										}
+									});
+								} else {
+									$.messager.alert({
+										title: '提示信息',
+										msg: '重置失败',
+										showType: 'show',
+									});
+									$("#dg").edatagrid("load");
+								}
+							});
+						}
+					});
+				} else {
+					$.messager.confirm('确认', '您确认想要重置该用户的密码么？', function(r) {
+						if(r) { // 用户点击了确认按钮
+							//真正执行重置的代码……
+							$.post("http://localhost:8080/SSMCyj/users/clearUsers.php", {
+								id: row.id,
+								loginName: row.loginName,
+								token: token
+							}, function(lock) {
+								var lock = eval("(" + lock + ")"); //你知道这里可以如何修改从而变得更简单么？                 
+								if(lock) {
+									$.messager.alert({
+										title: '提示信息',
+										msg: '重置后的密码为cyj666',
+										showType: 'show'
+									});
+									$("#dg").edatagrid("load");
+								} else {
+									$.messager.alert({
+										title: '提示信息',
+										msg: '重置失败',
+										showType: 'show',
+									});
+									$("#dg").edatagrid("load");
+								}
+							});
+						}
+					});
+				}
+			}
+		</script>
+		<!-- 解锁 -->
+		<script>
+			//锁定和解锁用户
+			function formatterLockUser(value, row, index) {
+				return "<a class='easyui-linkbutton' data-require-permission='roles:getRolesList.php' iconCls='icon-tip' style='cursor: pointer;' onclick='showRoles(" +
+					index + ")'>设置角色</a>  <a class='easyui-linkbutton' data-require-permission='users:clearUsers.php' iconCls='icon-redo' style='cursor: pointer;'  onclick='resetPassword(" +
+					index + ")'>重置密码</a>  <a class='easyui-linkbutton' data-require-permission='users:lockUsers.php' iconCls='icon-lock' style='cursor: pointer;' onclick='lockUser(" +
+					index +
+					")'>锁定用户</a>  <a class='easyui-linkbutton' data-require-permission='users:lockUsers.php' iconCls='icon-ok' style='cursor: pointer;' onclick='unlockUser(" +
+					index + ")'>解锁用户</a>";
+			}
+
+			//锁定用户
+			function lockUser(index) {
+				var data = $("#dg").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+				if(row.isLookout == '是') {
+					$.messager.alert({
+						title: '提示信息',
+						msg: '该用户已锁定请勿重复操作',
+						showType: 'show'
+					});
+					return;
+				}
+				//弹出用户确认框
+				$.messager.confirm('确认', '您确认想要锁定该用户？', function(r) {
+					if(r) { // 用户点击了确认按钮
+						//真正执行锁定的代码……
+						$.post("http://localhost:8080/SSMCyj/users/lockUsers.php", {
+							id: row.id,
+							isLookout: '是',
+							psdWrongTime: 3,
+							token: token
+						}, function(lock) {
+							var lock = eval("(" + lock + ")"); //你知道这里可以如何修改从而变得更简单么？                 
+							if(lock) {
+								$.messager.alert({
+									title: '提示信息',
+									msg: '锁定成功',
+									showType: 'show',
+								});
+								$("#dg").edatagrid("load");
+							} else {
+								$.messager.alert({
+									title: '提示信息',
+									msg: '锁定失败',
+									showType: 'show',
+								});
+								$("#dg").edatagrid("load");
+							}
+						});
+					}
+				});
+			}
+
+			//解锁用户
+			function unlockUser(index) {
+				var data = $("#dg").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+				if(row.isLookout == '否') {
+					$.messager.alert({
+						title: '提示信息',
+						msg: '该用户已解锁请勿重复操作',
+						showType: 'show'
+					});
+					return;
+				}
+				//弹出用户确认框
+				$.messager.confirm('确认', '您确认想要解锁该用户？', function(r) {
+					if(r) { // 用户点击了确认按钮
+						//真正执行解锁的代码……
+						$.post("http://localhost:8080/SSMCyj/users/lockUsers.php", {
+							id: row.id,
+							isLookout: '否',
+							psdWrongTime: 0,
+							token: token
+						}, function(unlock) {
+							var unlock = eval("(" + unlock + ")"); //你知道这里可以如何修改从而变得更简单么？                 
+							if(unlock) {
+								$.messager.alert({
+									title: '提示信息',
+									msg: '解锁成功',
+									showType: 'show'
+								});
+								$("#dg").edatagrid("load");
+							} else {
+								$.messager.alert({
+									title: '提示信息',
+									msg: '解锁失败',
+									showType: 'show',
+								});
+								$("#dg").edatagrid("load");
+							}
+						});
+					}
+				});
+
+			}
+
+			function openDepartmentAddDialog() {
+				$('#dlgs').dialog('open').dialog("setTitle", "添加用户");
+			}
+
+			function addDepartment() {
+				var depname = $("#departmentNames").val();
+				var desc = $("#departmentDescs").val();
+				$.messager.confirm('确认', '您确认想要添加该用户吗？', function(r) {
+					if(r) { // 用户点击了确认按钮
+						var formData = serializeNotNull($('#fms').serialize());
+						var boo = $('#fms').form('validate');
+						if(boo) {
+							$.ajax({
+								type: "POST",
+								url: "http://localhost:8080/SSMCyj/users/addUsers.php?token=" + token,
+								cache: false,
+								data: formData,
+								dataType: "json",
+								success: function(result) {
+									$.messager.alert("系统提示", result.message);
+									resetValues();
+									$("#dlgs").dialog("close");
+									$("#dg").datagrid("reload");
+								},
+								error: function(result) {
+									$.messager.alert("系统提示", result.message);
+									return;
+								}
+							});
+						}
+					}
+				});
+			}
+
+			function closeDepartmentDialogs() {
+				$('#dlgs').dialog("close");
+				resetValues();
+			}
+
+			function resetValues() {
+				$('#departmentNames').val("");
+				$('#departmentDescs').val("");
+			}
+		</script>
+	</head>
+
+	<body id="yh">
+		<table id="dg" name="center" title="客户列表" style="width:100%;height:414px;overflow:auto;" toolbar="#toolbar" pagination="true" idField="id" rownumbers="true" collapsible="true" fitColumns="true" singleSelect="false" pageSize=10>
+			<thead>
+				<tr>
+					<th data-options="field:'id',width:280,hidden:true">用户ID</th>
+					<th id="loginNamess" data-options="field:'loginName'" width="100">姓名</th>
+					<th id="protectEMails" data-options="field:'protectEMail',width:160" editor="{type:'validatebox',options:{validType:'email'}}">Email</th>
+					<th id="protectMTels" data-options="field:'protectMTel',width:100" editor="{type:'validatebox',options:{validType:'mobile'}}">手机号</th>
+					<th id="isLookouts" data-options="field:'isLookout',width:100,formatter:formatterIsLockout">是否锁定</th>
+					<th id="createTimes" data-options="field:'createTime',width:160">创建时间</th>
+					<th id="psdWrongTimes" data-options="field:'psdWrongTime',width:80">密码错误次数</th>
+					<th id="lastLoginTimes" data-options="field:'lastLoginTime',width:160,">最后登录的时间</th>
+					<th data-options="field:'setLock',width:320,align:'center',formatter:formatterLockUser">用户操作</th>
+				</tr>
+			</thead>
+		</table>
+
+		<div id="toolbar" style="height:auto">
+			<div id="tb" style="margin-bottom:5px">
+				<from id="sousuo" method="post">
+					客户名: <input class="easyui-textbox" id="loginName" name="loginName" style="width:80px"> 负责人: <input class="easyui-textbox" id="loginName" name="loginName" style="width:80px"> 
+					邮箱: <input class="easyui-textbox" id="protectEMail" name="protectEMail" style="width:80px"> 
+					手机号: <input class="easyui-textbox" id="protectMTel" name="protectMTel" style="width:80px">
+					<!--<select class="easyui-combobox" id="isLookout" name="isLookout" editable="false" panelHeight="auto">
+						<option value="">请选择用户状态</option>
+						<option value="1">持续跟踪</option>
+						<option value="2">重点跟踪</option>
+						<option value="3">重点回访</option>
+					</select>-->
+					<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="javascript:doSearch()">查询</a>
+				</from>
+			</div>
+			<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" data-require-permission="users:addUsers.php" onclick="javascript:openDepartmentAddDialog()">添加用户</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true" data-require-permission="users:delUsers.php" onclick="javascript:$('#dg').edatagrid('destroyRow')">删除用户</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="javascript:$('#dg').edatagrid('saveRow')">保存</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-undo" plain="true" onclick="javascript:$('#dg').edatagrid('cancelRow')">撤销</a>
+
+			<!-- 设置-->
+			<div class="easyui-window" id="sz-window" title="设置角色信息" data-options="moal:true,iconCls:'icon-save',closed:true" style="width:45% ; height: 500px; padding: 30px;">
+				<div class="easyui-layout" data-options="fit:true" style="width: 100%; height: 100%; "  >
+					<div data-options="region:'west',border:false" style="width: 38%; height: auto; background: url(img/xingk2.jpg) no-repeat;" >
+						<table id="zb" class="easyui-datagrid" title="系统所有角色" style=" width: 100%; height: auto; margin-top: 30px; ">
+							<thead>
+								<tr>
+									<th data-options="field:'id',hidden:true">角色ID</th>
+									<th data-options="field:'name',width:100">角色名称</th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+					<div data-options="region:'center'" style="border:0;text-align: center;background: url(img/xingk2.jpg) no-repeat;">
+						<a href="javascript:void(0)" style="width: auto; margin-top: 150px ;margin-bottom: 20px;" class="easyui-linkbutton" onclick="addTian()">&gt;&gt;添加</a><br />
+						<a href="javascript:voids(0)" style="width: auto;" class="easyui-linkbutton" onclick="deleteYi()">&lt;&lt;移除</a>
+					</div>
+					<div data-options="region:'east',border:false" style="width: 38%; height: auto;background: url(img/xingk2.jpg) no-repeat;">
+						<table id="yb" class="easyui-datagrid" title="当前用户的角色" style="width: 100%; height: auto; margin-top: 30px;">
+							<thead>
+								<tr>
+									<th data-options="field:'id',hidden:true">角色ID</th>
+									<th data-options="field:'name',width:100">角色名称</th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<!--
+            	作者：867647213@qq.com
+            	时间：2018-06-14
+            	描述：添加用户
+            -->
+			<div id="dlgs" class="easyui-dialog" style="width:280px;height:auto;padding:10px 20px;background: url(img/beijing.jpg) no-repeat; background-size: 100% 100%;" closed="true" buttons="#dlg-buttonss">
+				<form id="fms" method="post">
+					<table>
+						<tr>
+							<td>用户名：</td>
+							<td><input name="loginName" id="loginName" class="easyui-textbox" data-options="validType:'name',required:true">
+							</td>
+						</tr>
+						<tr>
+							<td valign="top">邮箱：</td>
+							<td>
+								<input name="protectEMail" id="protectEMail" class="easyui-textbox" data-options="validType:'email'">
+							</td>
+						</tr>
+						<tr>
+							<td valign="top">手机号：</td>
+							<td>
+								<input name="protectMTel" id="protectMTel" class="easyui-textbox" data-options="validType:'mobile'">
+							</td>
+						</tr>
+					</table>
+				</form>
+			</div>
+			<div id="dlg-buttonss" style="background: url(img/xingk1.jpg) no-repeat; background-size: 100% 100%;">
+				<a href="javascript:addDepartment()" class="easyui-linkbutton" iconCls="icon-ok">保存</a>
+				<a href="javascript:closeDepartmentDialogs()" class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+			</div>
+	</body>
+
+</html>

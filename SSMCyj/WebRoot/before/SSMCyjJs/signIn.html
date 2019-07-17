@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>员工签到</title>
+		<link rel="icon" href="img/timg.jpg">
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/icon.css" />
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/default/easyui.css" />
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/jscript" src="js/jquery.edatagrid.js"></script>
+		<script type="text/jscript" src="js/easyUIvalidate.js"></script>
+		<style>
+			.datagrid-td-rownumber {
+				height: 26px;
+			}
+		</style>
+		<script type="text/javascript">
+			var token = window.localStorage.getItem("token"); //取出暂存的token数据
+			var loginIds = window.localStorage.getItem("loginId"); // 登录用户的id
+			var roleId = window.localStorage.getItem("roleIds"); // 登录用户拥有的角色
+			var loginNames = window.localStorage.getItem("loginName"); // 登录用户的名称
+			let p;
+			var signT;
+			$(function() {
+				p = roleId.split(",");
+				for(var i = 0; i < p.length; i++) {
+					if(p[i] == 2) {
+						$("#dg").edatagrid({ //为了加载小图标
+							url: 'http://localhost:8080/SSMCyj/signin/getSignin.php',
+							queryParams: { //datagrid的固定参数
+								token: token //必传
+							},
+							columns: [
+								[{
+										field: 'id',
+										align: 'center',
+										width: 280,
+										title: '员工ID',
+										hidden: true
+									},
+									{
+										field: 'loginName',
+										align: 'center',
+										title: '员工名称',
+										width: 200
+									},
+									{
+										field: 'signState',
+										align: 'center',
+										title: '签到状态',
+										width: 200
+									},
+									{
+										field: 'signTime',
+										align: 'center',
+										title: '签到时间',
+										width: 200
+									},
+									{
+										field: 'signOutTime',
+										align: 'center',
+										title: '签退时间',
+										width: 200
+									},
+									{
+										field: 'setPassword',
+										width: 180,
+										align: 'center',
+										title: '操作',
+										formatter: formatterOPUser
+									},
+								]
+							],
+							onLoadSuccess: function() {
+								$(".easyui-linkbutton").linkbutton();
+								handlePermission();
+							}
+						});
+					} else {
+						$("#dg").edatagrid({ //为了加载小图标
+							url: 'http://localhost:8080/SSMCyj/signin/getSignin.php',
+							queryParams: { //datagrid的固定参数
+								token: token, //必传
+								loginName: loginNames
+							},
+							columns: [
+								[{
+										field: 'id',
+										align: 'center',
+										width: 280,
+										title: '员工ID',
+										hidden: true
+									},
+									{
+										field: 'loginName',
+										align: 'center',
+										title: '员工名称',
+										width: 200
+									},
+									{
+										field: 'signState',
+										align: 'center',
+										title: '签到状态',
+										width: 200
+									},
+									{
+										field: 'signTime',
+										align: 'center',
+										title: '签到时间',
+										width: 200
+									},
+									{
+										field: 'signOutTime',
+										align: 'center',
+										title: '签退时间',
+										width: 200
+									},
+									{
+										field: 'setPassword',
+										width: 180,
+										align: 'center',
+										title: '操作',
+										formatter: formatterOPUser
+									},
+								]
+							],
+							onLoadSuccess: function() {
+								$(".easyui-linkbutton").linkbutton();
+								handlePermission();
+							}
+						});
+					}
+				}
+
+				/**
+				 * 页面加载完成自动执行
+				 * 使用权限控制元素的访问
+				 */
+				//handlePermission();
+
+			});
+
+			function handlePermission() {
+				console.log('权限控制插件data-require-permission.js加载成功!');
+				let permission = window.localStorage.getItem("permission"); //从session缓存中取出权限数组
+				console.log("权限控制插件permission=>" + permission);
+				$("*[data-require-permission]").map((i, ele) => {
+					let elePer = $(ele).attr('data-require-permission');
+					console.log("elePer=>" + elePer);
+
+					let p = permission.split(",");
+
+					let requireRemove = true;
+
+					for(var i = 0; i < p.length; i++) {
+						if(elePer == p[i]) requireRemove = false;
+					}
+					if(requireRemove) {
+						$(ele).remove();
+					};
+				});
+			}
+
+			//查询
+			function doSearch() {
+				var birthStart = $('#s_bbirthday').datebox('getValue');
+				var birthEnd = $('#s_ebirthday').datebox('getValue');
+				p = roleId.split(",");
+				for(var i = 0; i < p.length; i++) {
+					if(p[i] == 2) {
+						$('#dg').datagrid('load', {
+							token: token,
+							loginName: $("#loginName").val(),
+							birthStart: birthStart,
+							birthEnd: birthEnd,
+							signState: $("#signState").combobox('getValue'),
+							columns: [
+								[{
+										field: 'id',
+										align: 'center',
+										width: 280,
+										title: '员工ID',
+										hidden: true
+									},
+									{
+										field: 'loginName',
+										align: 'center',
+										title: '员工名称',
+										width: 200
+									},
+									{
+										field: 'signState',
+										align: 'center',
+										title: '签到状态',
+										width: 200
+									},
+									{
+										field: 'signTime',
+										align: 'center',
+										title: '签到时间',
+										width: 200
+									},
+									{
+										field: 'signOutTime',
+										align: 'center',
+										title: '签退时间',
+										width: 200
+									},
+									{
+										field: 'setPassword',
+										width: 180,
+										align: 'center',
+										title: '操作',
+										formatter: formatterOPUser
+									},
+								]
+							]
+						});
+					} else {
+						$('#dg').datagrid('load', {
+							token: token,
+							loginName: loginNames,
+							birthStart: birthStart,
+							birthEnd: birthEnd,
+							signState: $("#signState").combobox('getValue'),
+							columns: [
+								[{
+										field: 'id',
+										align: 'center',
+										width: 280,
+										title: '员工ID',
+										hidden: true
+									},
+									{
+										field: 'loginName',
+										align: 'center',
+										title: '员工名称',
+										width: 200
+									},
+									{
+										field: 'signState',
+										align: 'center',
+										title: '签到状态',
+										width: 200
+									},
+									{
+										field: 'signTime',
+										align: 'center',
+										title: '签到时间',
+										width: 200
+									},
+									{
+										field: 'signOutTime',
+										align: 'center',
+										title: '签退时间',
+										width: 200
+									},
+									{
+										field: 'setPassword',
+										width: 180,
+										align: 'center',
+										title: '操作',
+										formatter: formatterOPUser
+									},
+								]
+							]
+						});
+					}
+				}
+
+			}
+		</script>
+
+		<script type="text/javascript">
+			//格式化时间
+			function formatDate(date) { //设置时间转换格式
+				var y = date.getFullYear(); //获取年
+				var m = date.getMonth() + 1; //获取月
+				var d = date.getDate(); //获取日
+				var h = date.getHours();
+				var mi = date.getMinutes();
+				var s = date.getSeconds();
+				return y + '-' + m + '-' + d + ' ' + h + ':' + mi + ':' + s; //返回时间格式
+			}
+			//比较时间
+			function GetDateDiff(startTime, endTime, diffType) {
+				//将xxxx-xx-xx的时间格式，转换为 xxxx/xx/xx的格式
+				startTime = startTime.replace(/\-/g, "/");
+				endTime = endTime.replace(/\-/g, "/");
+				//将计算间隔类性字符转换为小写
+				diffType = diffType.toLowerCase();
+				var sTime = new Date(startTime); //开始时间
+				var eTime = new Date(endTime); //结束时间
+				//作为除数的数字
+				var divNum = 1;
+				switch(diffType) {
+					case "second":
+						divNum = 1000;
+						break;
+					case "minute":
+						divNum = 1000 * 60;
+						break;
+					case "hour":
+						divNum = 1000 * 3600;
+						break;
+					case "day":
+						divNum = 1000 * 3600 * 24;
+						break;
+					default:
+						break;
+				}
+				return parseInt((eTime.getTime() - sTime.getTime()) / parseInt(divNum));
+			}
+
+			//操作用户
+			function formatterOPUser(value, row, index) {
+				return "<a class='easyui-linkbutton' iconCls='icon-edit' data-require-permission='signin:updSignin.php' style='cursor: pointer;' onclick='signOut(" + index + ")'>签退</a>";
+			}
+
+			// 签退
+			function signOut(index) {
+				var data = $("#dg").datagrid("getData"); //获取datagrid对应的json对象集合（再来一遍）。
+				var row = data.rows[index]; //获取第index行对应的json对象（再来一遍）。
+				var signTime = row.signTime;
+				var time2 = new Date(); //获取时间
+				var d2 = formatDate(time2);
+				var signState = row.signState;
+				var id = row.id;
+				if(row.userId != loginIds) {
+					$.messager.alert({
+						title: '提示信息',
+						msg: '无权修改其他人的签退状态!',
+						timeout: 3000, //推出时间
+						showType: 'slide', //动画效果
+						showSpeed: 3000
+						//显示时间
+					});
+					return;
+				}
+
+				if(signState == "未签到") {
+					$.messager.alert({
+						title: '提示信息',
+						msg: '您还未签到,无法进行签退!',
+						timeout: 3000, //推出时间
+						showType: 'slide', //动画效果
+						showSpeed: 3000
+						//显示时间
+					});
+					return;
+				}
+				if(signState == "已签退") {
+					$.messager.alert({
+						title: '提示信息',
+						msg: '您已签退,请勿重复签退!',
+						timeout: 3000, //推出时间
+						showType: 'slide', //动画效果
+						showSpeed: 3000
+						//显示时间
+					});
+					return;
+				}
+
+				if(GetDateDiff(signTime, d2, "minute") < 10) {
+					$.messager.alert({
+						title: '提示信息',
+						msg: '你当前签到不足10分钟，无法签退！',
+						timeout: 3000, //推出时间
+						showType: 'slide', //动画效果
+						showSpeed: 3000
+						//显示时间
+					});
+					return;
+				}
+
+				if(signState == "已签到") {
+					signState = "已签退";
+				}
+				$.messager.confirm('确认', '您确认要签退么？', function(r) {
+					if(r) {
+						$.post('http://localhost:8080/SSMCyj/signin/updSignin.php', {
+							token: token,
+							signState: signState,
+							userId: row.userId,
+							id: id
+						}, function(res) {
+							if(res.success) {
+								window.top.signState();
+								$.messager.alert({
+									title: '提示信息',
+									msg: res.message,
+									timeout: 3000, //推出时间
+									showType: 'slide', //动画效果
+									showSpeed: 3000,
+									//显示时间
+									fn: function() {
+										$('#dg').datagrid('reload');
+									}
+								});
+							} else {
+								$.messager.alert({
+									title: '提示信息',
+									msg: res.message,
+									timeout: 3000, //推出时间
+									showType: 'slide', //动画效果
+									showSpeed: 3000
+									//显示时间
+								});
+								return;
+							}
+						},'json');
+					}
+				});
+			}
+		</script>
+
+	</head>
+
+	<body style="background: url(img/xingk2.jpg) no-repeat; background-size: 100% 710px">
+
+		<table name="center" class="easyui-datagrid" id="dg" toolbar="#toolbar" title="签到列表" collapsible="true" style="width:100%; height:444px;overflow:auto" data-options="rownumbers:true,split:true,pagination:true,pageSize:10,singleSelect: true">
+
+		</table>
+
+		<div id="toolbar" style="padding:5px; height:auto;background: url(img/xingk1.jpg) no-repeat;background-size: 100% auto">
+			<div id="tb" style="margin-bottom:5px">
+				<from id="sousuo" method="post">
+					员工名称: <input class="easyui-textbox" id="loginName" name="loginName" style="width:80px"> &nbsp;&nbsp;&nbsp; 签到时间: <input type="text" class="easyui-datebox" name="s_bbirthday" id="s_bbirthday" size="11" editable="false" /> ~
+					<input type="text" class="easyui-datebox" name="s_ebirthday" data-options="validType:'equaldDate[\'#s_bbirthday\']'" id="s_ebirthday" size="11" editable="false" />&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 签到状态:
+					<select class="easyui-combobox" id="signState" name="signState" editable="false" panelHeight="auto">
+						<option value="">全部</option>
+						<option value="未签到">未签到</option>
+						<option value="已签到">已签到</option>
+						<option value="已签退">已签退</option>
+					</select>
+					<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="javascript:doSearch()">查询</a>
+				</from>
+			</div>
+		</div>
+
+	</body>
+
+</html>

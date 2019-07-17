@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cyj.dao.VacationDao">
+
+	<select id="getVacation" parameterType="com.cyj.entity.Vacation"
+		resultType="vacation">
+		SELECT
+		id,userId,leaveType,leaveDate,content,leaveTime,isAgree,pContent,pName,pTime,NAME,endTime
+		FROM vacation
+		<where>
+			<if test=" leaveType != null and leaveType !='' ">leaveType LIKE "%"#{leaveType}"%"</if>
+			<if test=" name != null and name != '' ">AND name LIKE "%"#{name}"%"</if>
+			<if test=" isAgree != null and isAgree != '' ">AND isAgree LIKE "%"#{isAgree}"%"</if>
+			<if test=" pName != null and pName != '' ">AND pName LIKE "%"#{pName}"%"</if>
+		</where>
+		LIMIT #{startIndex},#{rows}
+	</select>
+
+	<select id="getVacationCount" parameterType="com.cyj.entity.Vacation"
+		resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM vacation
+		<where>
+			<if test=" leaveType != null and leaveType !='' ">leaveType LIKE "%"#{leaveType}"%"</if>
+			<if test=" name != null and name != '' ">AND name LIKE "%"#{name}"%"</if>
+			<if test=" isAgree != null and isAgree != '' ">AND isAgree LIKE "%"#{isAgree}"%"</if>
+			<if test=" pName != null and pName != '' ">AND pName LIKE "%"#{pName}"%"</if>
+		</where>
+	</select>
+	
+	<select id="getVacationByName" parameterType="com.cyj.entity.Vacation" resultType="vacation">
+		SELECT
+		id,userId,leaveType,leaveDate,content,leaveTime,isAgree,pContent,pName,pTime,NAME,endTime
+		FROM vacation
+		<where>
+			<if test=" name != null and name != '' ">AND name LIKE "%"#{name}"%"</if>
+			<if test=" isAgree != null and isAgree != '' ">AND isAgree LIKE "%"#{isAgree}"%"</if>
+			<if test=" leaveType != null and leaveType !='' ">leaveType LIKE "%"#{leaveType}"%"</if>
+		</where>
+	</select>
+	
+	<select id="getVacationName" parameterType="com.cyj.entity.Vacation" resultType="vacation">
+		SELECT
+		id,userId,leaveType,leaveDate,content,leaveTime,isAgree,pContent,pName,pTime,NAME,endTime
+		FROM vacation
+		<where>
+			<if test="kqYue != null and kqYue != '' ">
+				AND leaveTime LIKE "%"#{kqYue}"%"
+			</if>
+			<if test=" name != null and name != '' ">AND name LIKE "%"#{name}"%"</if>
+			<if test=" isAgree != null and isAgree != '' ">AND isAgree LIKE "%"#{isAgree}"%"</if>
+			<if test=" leaveType != null and leaveType !='' ">AND leaveType LIKE "%"#{leaveType}"%"</if>
+		</where>
+	</select>
+	
+	<insert id="addVacation" parameterType="vacation" useGeneratedKeys="true"
+		keyColumn="id">
+		INSERT INTO vacation
+		(userId,leaveType,leaveDate,content,leaveTime,pContent,pName,pTime,name,endTime)
+		VALUES
+		(#{userId},#{leaveType},#{leaveDate},#{content},#{leaveTime},#{pContent},#{pName},#{pTime},#{name},#{endTime})
+	</insert>
+
+	<update id="updVacation" parameterType="vacation">
+		UPDATE vacation
+		<trim suffix="" suffixOverrides="," prefix="SET" prefixOverrides="">
+			<if test="leaveType !=null and leaveType !=''">
+				leaveType=#{leaveType},
+			</if>
+			<if test="leaveDate != 0 ">
+				leaveDate=#{leaveDate},
+			</if>
+			<if test="content !=null and content !='' ">
+				content=#{content},
+			</if>
+			<if test="isAgree !=null and isAgree !='' ">
+				isAgree=#{isAgree},
+			</if>
+			<if test="pContent !=null and pContent !='' ">
+				pContent=#{pContent},
+			</if>
+			<if test="pName !=null and pName !='' ">
+				pName=#{pName},
+			</if>
+			<if test="pTime !=null ">
+				pTime=#{pTime},
+			</if>
+			<if test="leaveTime !=null ">
+				leaveTime=#{leaveTime},
+			</if>
+			<if test="endTime !=null ">
+				endTime=#{endTime},
+			</if>
+		</trim>
+
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="id != 0">
+				and id=#{id}
+			</if>
+		</trim>
+
+	</update>
+
+	<delete id="delVacation" parameterType="String">
+		DELETE FROM vacation
+		WHERE id IN
+		<foreach collection="list" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+	
+</mapper>

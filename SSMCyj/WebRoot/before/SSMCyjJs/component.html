@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>分量设置</title>
+		<link rel="icon" href="img/timg.jpg">
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/icon.css" />
+		<link rel="stylesheet" href="js/jquery-easyui-1.4.5/themes/default/easyui.css" />
+
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="js/jquery-easyui-1.4.5/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/jscript" src="js/jquery.edatagrid.js"></script>
+		<script type="text/javascript" src="js/easyUIvalidate.js"></script>
+		<script type="text/javascript">
+			var comState;
+			var token = window.localStorage.getItem("token"); //取出暂存的token数据
+			$(function() {
+				$.post('http://localhost:8080/SSMCyj/students/selComponent.php', {
+					token: token,
+				}, function(res) {
+					if(res.comState==0){
+						$('#wSet').switchbutton('uncheck');
+					}else{
+						$('#wSet').switchbutton('check');
+					}
+				}, "json");
+			});
+
+			function saveIsAuto() {
+				var wSet = $('#wSet').switchbutton('options').checked;
+				if(wSet) {
+					comState = 1;
+					$.post('http://localhost:8080/SSMCyj/students/updComponent.php', {
+						token: token,
+						comState: comState,
+						id: 1
+					}, function(res) {
+						if(res.success) {
+							window.top.signState();
+							$.messager.alert({
+								title: '提示信息',
+								msg: "分量设置开启成功!",
+								timeout: 3000, //推出时间
+								showType: 'slide', //动画效果
+								showSpeed: 3000
+								//显示时间
+							});
+							window.localStorage.setItem("comState", res.message.comState);
+						} else {
+							$.messager.alert({
+								title: '提示信息',
+								msg: res.message,
+								timeout: 3000, //推出时间
+								showType: 'slide', //动画效果
+								showSpeed: 3000
+								//显示时间
+							});
+							return;
+						}
+					}, "json");
+				} else {
+					comState = 0;
+					$.post('http://localhost:8080/SSMCyj/students/updComponent.php', {
+						token: token,
+						comState: comState,
+						id: 1
+					}, function(res) {
+						if(res.success) {
+							window.top.signState();
+							$.messager.alert({
+								title: '提示信息',
+								msg: "分量设置关闭成功!",
+								timeout: 3000, //推出时间
+								showType: 'slide', //动画效果
+								showSpeed: 3000
+								//显示时间
+							});
+							window.localStorage.setItem("comState", res.message.comState);
+						} else {
+							$.messager.alert({
+								title: '提示信息',
+								msg: res.message,
+								timeout: 3000, //推出时间
+								showType: 'slide', //动画效果
+								showSpeed: 3000
+								//显示时间
+							});
+							return;
+						}
+					}, "json");
+				}
+			}
+		</script>
+
+	</head>
+
+	<body style="background: url(img/mainbj.jpg) no-repeat; background-size: 100% 710px">
+		<div id="p" class="easyui-window" title="分量设置" style="width:400px;height:400px;padding:50px;background:#fafafa;background: url(img/beijing.jpg) no-repeat; background-size: 100% 100%" data-options="closable:false, collapsible:true,minimizable:false,maximizable:false">
+
+			程序自动分配开关:<input switchbuttonname="wSet" id="wSet" onText="开" offText="关" class="easyui-switchbutton" style="width: 100px; height: 30px; display: none;">
+			<a group="" href="#" class="easyui-linkbutton l-btn l-btn-small" iconcls="icon-save" onclick="saveIsAuto()">保存
+			</a>
+
+		</div>
+	</body>
+
+</html>

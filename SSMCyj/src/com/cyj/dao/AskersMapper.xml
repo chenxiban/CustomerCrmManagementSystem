@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cyj.dao.AskersDao">
+
+	<select id="getAskers" parameterType="com.cyj.entity.Askers"
+		resultType="askers">
+		SELECT
+		*
+		FROM
+		askers
+		WHERE 1=1
+		<if test=" askerName != null and askerName !='' ">
+			AND askerName LIKE "%"#{askerName}"%"
+		</if>
+		ORDER BY id DESC
+		LIMIT #{startIndex},#{rows}
+	</select>
+	
+	<select id="getAskersByName" parameterType="string"
+		resultType="askers">
+		SELECT
+		*
+		FROM
+		askers
+		WHERE 1=1
+		<if test=" askerName != null and askerName !='' ">
+			AND askerName = #{askerName}
+		</if>
+	</select>
+	
+	<select id="getAskersCount" parameterType="com.cyj.entity.Askers"
+		resultType="java.lang.Integer">
+		SELECT
+		COUNT(*)
+		FROM
+		askers
+		<where>
+			<if test=" askerName != null and askerName !='' ">AND askerName LIKE "%"#{askerName}"%"</if>
+		</where>
+		LIMIT #{startIndex},#{rows}
+	</select>
+
+	<select id="getAskersById" parameterType="int" resultType="askers">
+		SELECT * FROM askers WHERE askerName IN (
+		SELECT loginName FROM users
+		WHERE id = #{id})
+	</select>
+
+	<!-- 5-28修改 -->
+	<update id="updAskers" parameterType="askers">
+		UPDATE askers
+		<trim suffix="" suffixOverrides="," prefix="SET" prefixOverrides="">
+			<if test="checkState !=null and checkState !='' ">
+				checkState=#{checkState},
+			</if>
+			<if test="changeState !=null and changeState !='' ">
+				changeState=#{changeState},
+			</if>
+			<if test="weight != 0 ">
+				weight=#{weight},
+			</if>
+			<if test="remark !=null and remark !='' ">
+				remark=#{remark},
+			</if>
+		</trim>
+
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="id != 0">
+				and id=#{id}
+			</if>
+		</trim>
+
+	</update>
+	
+	<!-- 5-28修改 -->
+	<update id="updAskersByName" parameterType="askers">
+		UPDATE askers
+		<trim suffix="" suffixOverrides="," prefix="SET" prefixOverrides="">
+			<if test="checkState !=null and checkState !='' ">
+				checkState=#{checkState}
+			</if>
+		</trim>
+
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="askerName != null and askerName != '' ">
+				and askerName=#{askerName}
+			</if>
+		</trim>
+
+	</update>
+
+	<insert id="addAskers">
+		INSERT INTO askers
+		(askerName,checkState,roleName)
+		VALUES (#{askerName},#{checkState},#{roleName})
+	</insert>
+
+	<delete id="delAskers" parameterType="string">
+		DELETE FROM askers
+		WHERE askerName IN
+		<foreach collection="askerName" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+</mapper>

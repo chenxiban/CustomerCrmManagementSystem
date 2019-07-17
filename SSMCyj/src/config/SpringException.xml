@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans.xsd
+						http://www.springframework.org/schema/aop 
+						http://www.springframework.org/schema/aop/spring-aop.xsd
+						http://www.springframework.org/schema/context 
+						http://www.springframework.org/schema/context/spring-context.xsd
+						http://www.springframework.org/schema/tx 
+						http://www.springframework.org/schema/tx/spring-tx.xsd">
+	
+	   <!-- 引入异常处理映射之后,项目所有异常都被处理,控制台看不到了,直接转发或重定向到目标URL -->
+       <!-- 定义需要特殊处理的异常，用类名或完全路径名作为key，异常页面作为值,支持转发和重定向 -->
+	<!--Spring异常页面跳转处理-->
+	<bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="exceptionMappings">
+			<props>
+					<!--未登录异常重定向处理机制-->
+				<prop key="com.ysd.tools.sys.exception.UnLoginException">redirect:/login/unLogin.php</prop>				
+				<!--token不合法异常处理机制-->
+				<prop key="com.auth0.jwt.exceptions.JWTDecodeException">redirect:/login/unLogin.php</prop>				
+				<!--Token过期异常重定向处理机制-->
+				<prop key="com.auth0.jwt.exceptions.TokenExpiredException">redirect:/login/tokenExpired.php</prop>
+				<!--没有权限访问异常重定向处理机制-->
+				<prop key="com.ysd.tools.sys.exception.NoPermissionException">redirect:/login/noPermission.php</prop>
+				<!--其它类异常重定向处理机制-->
+				<prop key="java.lang.Exception">redirect:/login/sysError.php</prop>
+			</props>
+		</property>
+	</bean>
+    
+	
+</beans>

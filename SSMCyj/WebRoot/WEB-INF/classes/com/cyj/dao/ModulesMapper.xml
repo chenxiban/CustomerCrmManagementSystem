@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cyj.dao.ModulesDao">
+
+	<select id="getModules" resultMap="AllModules">
+		SELECT
+		id,name,parentId,path,weight,createTime,lastUpdateTime,founder,updateMan
+		FROM modules ORDER BY weight DESC
+	</select>
+	
+	<select id="queryModules" parameterType="java.lang.String" resultType="modules">
+		SELECT
+		id,name,parentId,path,weight,createTime,lastUpdateTime,founder,updateMan
+		FROM modules WHERE name=#{name}
+	</select>
+
+	<select id="queryChildren" parameterType="int" resultMap="AllModules">
+		SELECT
+		id,name,parentId,path,weight,createTime,lastUpdateTime,founder,updateMan
+		FROM modules WHERE parentId=#{parentId}
+	</select>
+	
+	<select id="getChildrenByParentId" parameterType="string" resultType="string">
+		SELECT
+		id
+		FROM modules WHERE parentId IN
+		<foreach item="id" collection="parentId" open="(" separator=","
+				close=")">
+				#{id}
+		</foreach>
+	</select>
+	
+	<select id="getChildrenByParentIds" parameterType="string" resultType="string">
+		SELECT id FROM modules WHERE parentId IN(SELECT id FROM modules WHERE parentId IN 
+			<foreach item="id" collection="parentId" open="(" separator=","
+				close=")">
+				#{id}
+			</foreach>
+		)
+	</select>
+	
+
+	<select id="getModulesRoles" parameterType="list" resultType="int">
+		SELECT
+		moduleId FROM rolemodules
+		<where>
+			<if test=" roleId != null ">
+				roleId IN
+				<foreach item="id" collection="roleId" open="(" separator=","
+					close=")">
+					#{id}
+				</foreach>
+			</if>
+		</where>
+	</select>
+
+	<select id="queryChildrenById" resultMap="AllModules">
+		SELECT
+		id,name,parentId,path,weight,createTime,lastUpdateTime,founder,updateMan
+		FROM modules WHERE parentId=#{parentId}
+		<if test="moduleId !=null ">
+			AND id IN
+			<foreach collection="moduleId" item="item" index="index"
+				separator="," close=")" open="(">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+
+	<insert id="addModules" parameterType="modules"
+		useGeneratedKeys="true" keyColumn="id">
+		INSERT INTO modules
+		(NAME,parentId,path,weight,createTime,lastUpdateTime,founder)
+		VALUES
+		(#{name},#{parentId},#{path},#{weight},#{createTime},#{lastUpdateTime},#{founder})
+	</insert>
+
+	<update id="updModules" parameterType="modules">
+		UPDATE modules
+		<trim suffix="" suffixOverrides="," prefix="SET" prefixOverrides="">
+			<if test="name !=null and name !=''">
+				name=#{name},
+			</if>
+			<if test="parentId >-1">
+				parentId=#{parentId},
+			</if>
+			<if test="path !=null and path !=''">
+				path=#{path},
+			</if>
+			<if test="weight != 0">
+				weight=#{weight},
+			</if>
+			<if test="lastUpdateTime !=null">
+				lastUpdateTime=#{lastUpdateTime},
+			</if>
+			<if test="updateMan !=null and updateMan !=''">
+				updateMan=#{updateMan},
+			</if>
+		</trim>
+
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="id != 0">
+				and id=#{id}
+			</if>
+		</trim>
+	</update>
+
+	<delete id="delModules" parameterType="String">
+		DELETE FROM modules
+		WHERE
+		id IN
+		<foreach collection="id" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+	<resultMap type="modules" id="AllModules">
+		<id property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="parentId" column="parentId" />
+		<result property="path" column="path" />
+		<result property="weight" column="weight" />
+		<result property="createTime" column="createTime" />
+		<result property="lastUpdateTime" column="lastUpdateTime" />
+		<result property="founder" column="founder" />
+		<result property="updateMan" column="updateMan" />
+	</resultMap>
+
+	<resultMap type="rolemodules" id="AllModuleId">
+		<id property="id" column="id" />
+		<result property="roleId" column="roleId" />
+		<result property="moduleId" column="moduleId" />
+		<result property="moduleLastUpdateTime" column="moduleLastUpdateTime" />
+	</resultMap>
+
+</mapper>

@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cyj.dao.StudentsDao">
+
+	<select id="getStudents" parameterType="com.cyj.entity.Students"
+		resultType="students">
+		SELECT
+		*
+		FROM
+		students
+		<where>
+			<if test=" ziXunName != null and ziXunName !='' ">AND ziXunName=#{ziXunName}</if>
+			<if test=" name != null and name !='' ">AND name LIKE "%"#{name}"%"</if>
+			<if test=" age != 0 ">AND age=#{age}</if>
+			<if test=" phone != null and phone !='' ">AND phone LIKE "%"#{phone}"%"</if>
+			<if test=" sex != null and sex !='' ">AND sex LIKE "%"#{sex}"%"</if>
+			<if test=" isReturnVist != null and isReturnVist !='' ">AND isReturnVist LIKE "%"#{isReturnVist}"%"</if>
+			<if test=" isHome != null and isHome !='' ">AND isHome LIKE "%"#{isHome}"%"</if>
+			<if test=" isPay != null and isPay !='' ">AND isPay LIKE "%"#{isPay}"%"</if>
+			<if test=" qq != null and qq !='' ">AND qq LIKE "%"#{qq}"%"</if>
+			<if test=" createUser != null and createUser !='' ">AND createUser LIKE "%"#{createUser}"%"</if>
+			<if
+				test=" birthStart != null and birthStart != '' and birthEnd != null and birthEnd != '' ">
+				AND createTime BETWEEN #{birthStart} AND #{birthEnd}
+			</if>
+		</where>
+		LIMIT #{startIndex},#{rows}
+	</select>
+
+	<select id="getStudentsCounts" parameterType="string"
+		resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM students
+		<where>
+			<if test="address != null and address != '' ">
+				AND address LIKE "%"#{address}"%"
+			</if>
+		</where>
+	</select>
+
+	<select id="getStudentsCount" parameterType="com.cyj.entity.Students"
+		resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM students
+		<where>
+			<if test=" ziXunName != null and ziXunName !='' ">AND ziXunName=#{ziXunName}</if>
+			<if test=" name != null and name !='' ">AND name LIKE "%"#{name}"%"</if>
+			<if test=" age != 0 ">AND age LIKE "%"#{age}"%"</if>
+			<if test=" phone != null and phone !='' ">AND phone LIKE "%"#{phone}"%"</if>
+			<if test=" sex != null and sex !='' ">AND sex LIKE "%"#{sex}"%"</if>
+			<if test=" isReturnVist != null and isReturnVist !='' ">AND isReturnVist LIKE "%"#{isReturnVist}"%"</if>
+			<if test=" isHome != null and isHome !='' ">AND isHome LIKE "%"#{isHome}"%"</if>
+			<if test=" isPay != null and isPay !='' ">AND isPay LIKE "%"#{isPay}"%"</if>
+			<if test=" qq != null and qq !='' ">AND qq LIKE "%"#{qq}"%"</if>
+			<if test=" createUser != null and createUser !='' ">AND createUser LIKE "%"#{createUser}"%"</if>
+			<if
+				test=" birthStart != null and birthStart != '' and birthEnd != null and birthEnd != '' ">
+				AND createTime BETWEEN #{birthStart} AND #{birthEnd}
+			</if>
+		</where>
+	</select>
+
+	<select id="getStudentByIds" parameterType="String" resultType="students">
+		SELECT
+		*
+		FROM
+		students WHERE id IN
+		<foreach collection="list" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</select>
+
+
+	<delete id="delStudents" parameterType="String">
+		DELETE FROM students
+		WHERE id IN
+		<foreach collection="list" item="item" index="index"
+			separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+	<update id="updStudents" parameterType="com.cyj.entity.Students">
+		UPDATE students
+		<trim suffix="" suffixOverrides="," prefix="SET" prefixOverrides="">
+			<if test="name !=null and name !=''">
+				name=#{name},
+			</if>
+			<if test="age !=null and age !=''">
+				age=#{age},
+			</if>
+			<if test="sex !=null and sex !=''">
+				sex=#{sex},
+			</if>
+			<if test="phone !=null and phone !=''">
+				phone=#{phone},
+			</if>
+			<if test="stuStatus !=null and stuStatus !=''">
+				stuStatus=#{stuStatus},
+			</if>
+			<if test="perState !=null and perState !=''">
+				perState=#{perState},
+			</if>
+			<if test="msgSource !=null and msgSource !=''">
+				msgSource=#{msgSource},
+			</if>
+			<if test="sourceUrl !=null and sourceUrl !=''">
+				sourceUrl=#{sourceUrl},
+			</if>
+			<if test="sourceKeyWord !=null and sourceKeyWord !=''">
+				sourceKeyWord=#{sourceKeyWord},
+			</if>
+			<if test="address !=null and address !=''">
+				address=#{address},
+			</if>
+			<if test="netPusherId !=null and netPusherId !=''">
+				netPusherId=#{netPusherId},
+			</if>
+			<if test="askerId !=null and askerId !=''">
+				askerId=#{askerId},
+			</if>
+			<if test="qq !=null and qq !=''">
+				qq=#{qq},
+			</if>
+			<if test="weiXin !=null and weiXin !=''">
+				weiXin=#{weiXin},
+			</if>
+			<if test="content !=null and content !=''">
+				content=#{content},
+			</if>
+			<if test="learnForward !=null and learnForward !=''">
+				learnForward=#{learnForward},
+			</if>
+			<if test="isValid !=null and isValid !=''">
+				isValid=#{isValid},
+			</if>
+			<if test="record !=null and record !=''">
+				record=#{record},
+			</if>
+			<if test="isReturnVist !=null and isReturnVist !=''">
+				isReturnVist=#{isReturnVist},
+			</if>
+			<if test="firstVisitTime !=null">
+				firstVisitTime=#{firstVisitTime},
+			</if>
+			<if test="isHome !=null and isHome !=''">
+				isHome=#{isHome},
+			</if>
+			<if test="homeTime !=null">
+				homeTime=#{homeTime},
+			</if>
+			<if test="lostValid !=null and lostValid !=''">
+				lostValid=#{lostValid},
+			</if>
+			<if test="isPay !=null and isPay !=''">
+				isPay=#{isPay},
+			</if>
+			<if test="payTime !=null">
+				payTime=#{payTime},
+			</if>
+			<if test="money !=null and money !=''">
+				money=#{money},
+			</if>
+			<if test="isReturnMoney !=null and isReturnMoney !=''">
+				isReturnMoney=#{isReturnMoney},
+			</if>
+			<if test="isInClass !=null and isInClass !=''">
+				isInClass=#{isInClass},
+			</if>
+			<if test="inClassTime !=null">
+				inClassTime=#{inClassTime},
+			</if>
+			<if test="inClassContent !=null and inClassContent !=''">
+				inClassContent=#{inClassContent},
+			</if>
+			<if test="askerContent !=null and askerContent !=''">
+				askerContent=#{askerContent},
+			</if>
+			<if test="isDel !=null and isDel !=''">
+				isDel=#{isDel},
+			</if>
+			<if test="fromPart !=null and fromPart !=''">
+				fromPart=#{fromPart},
+			</if>
+			<if test="stuConcern !=null and stuConcern !=''">
+				stuConcern=#{stuConcern},
+			</if>
+			<if test="isBaoBei !=null and isBaoBei !=''">
+				isBaoBei=#{isBaoBei},
+			</if>
+			<if test="ziXunName !=null and ziXunName !=''">
+				ziXunName=#{ziXunName},
+			</if>
+			<if test="createUser !=null and createUser !=''">
+				createUser=#{createUser},
+			</if>
+			<if test="returnMoneyReason !=null and returnMoneyReason !=''">
+				returnMoneyReason=#{returnMoneyReason},
+			</if>
+			<if test="preMoney !=null and preMoney !=''">
+				preMoney=#{preMoney},
+			</if>
+			<if test="preMoneyTime !=null">
+				preMoneyTime=#{preMoneyTime},
+			</if>
+		</trim>
+
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="id != 0">
+				and id=#{id}
+			</if>
+		</trim>
+
+	</update>
+
+	<update id="updStudentsByIds" parameterType="string">
+		UPDATE students
+		<trim suffix="" suffixOverrides="," prefix="SET" prefixOverrides="">
+			<if test="ziXunName !=null and ziXunName !=''">
+				ziXunName=#{ziXunName},
+			</if>
+		</trim>
+
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="id != null ">
+				and id IN
+				<foreach collection="id" item="item" index="index"
+					separator="," close=")" open="(">
+					#{item}
+				</foreach>
+			</if>
+		</trim>
+
+	</update>
+
+	<insert id="addStudents" parameterType="students"
+		useGeneratedKeys="true" keyColumn="id">
+		INSERT INTO students
+		(name,age,sex,phone,stuStatus,perState,msgSource,sourceUrl,sourceKeyWord,address,netPusherId,qq,weiXin,content,createTime,isBaoBei,createUser,ziXunName)
+		VALUES
+		(#{name},#{age},#{sex},#{phone},#{stuStatus},#{perState},#{msgSource},#{sourceUrl},#{sourceKeyWord},#{address},#{netPusherId},#{qq},#{weiXin},#{content},#{createTime},#{isBaoBei},#{createUser},#{ziXunName})
+	</insert>
+
+	<insert id="addStudentByList" parameterType="students"
+		useGeneratedKeys="true" keyColumn="id">
+		INSERT INTO students
+		(name,age,sex,phone,stuStatus,
+		perState,msgSource,sourceUrl,
+		sourceKeyWord,address,netPusherId,askerId,
+		qq,weiXin,content,createTime,
+		learnForward,isValid,record,
+		isReturnVist,firstVisitTime,isHome,homeTime,
+		lostValid,isPay,payTime,money,isReturnMoney,
+		isInClass,inClassTime,inClassContent,askerContent,
+		isDel,fromPart,stuConcern,
+		isBaoBei,createUser,ziXunName,
+		returnMoneyReason,preMoney,preMoneyTime)
+		VALUES
+		(#{name},#{age},#{sex},#{phone},#{stuStatus},
+		#{perState},#{msgSource},#{sourceUrl},
+		#{sourceKeyWord},#{address},#{netPusherId},#{askerId},
+		#{qq},#{weiXin},#{content},#{createTime},
+		#{learnForward},#{isValid},#{record},
+		#{isReturnVist},#{firstVisitTime},#{isHome},#{homeTime},
+		#{lostValid},#{isPay},#{payTime},#{money},#{isReturnMoney},
+		#{isInClass},#{inClassTime},#{inClassContent},#{askerContent},
+		#{isDel},#{fromPart},#{stuConcern},
+		#{isBaoBei},#{createUser},#{ziXunName},
+		#{returnMoneyReason},#{preMoney},#{preMoneyTime})
+	</insert>
+
+</mapper>

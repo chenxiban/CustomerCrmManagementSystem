@@ -1,0 +1,66 @@
+一> 搭建一个基本的SpringMVC框架(实际使用依赖Spring框架)
+1,导入框架所需.jar
+2.在web.xm中 配置加载框架环境的 Servlet
+3.配置SpringMVC属性
+[
+启用SpringMVC注解
+启动组件扫描@Controller
+配置SpringMVC的视图解析器
+]
+
+二>SpringMVC接受前端参数,返回视图资源
+ModelAndView : 两大属性:设置返回视图名称,设置返回视图所需数据
+
+ModelMap: 不能设置返回视图名称,可以设置返回视图所需数据
+SpringMVC框架下的转发重定向1.Servlet技术 2.SpringMVC return 格式
+
+SpringMVC中的数据绑定
+一一): 基本数据类型,数组,对象类型,多层对象,同属性多对象,特殊类型
+二二):返回jsp视图,返回json字符串
+
+
+三>restful风格
+@RequestMapping  中使用 {}匹配数据
+@PathVariable("param")   把匹配数据param值赋予注解后面的参数
+
+
+
+四>拦截器 
+
+/**
+*J2EE
+*登录:用户,角色,权限
+*项目与项目之间数据共享: json , xml , excel(.zip),file 
+*文件上传下载
+Excel (POI,jxl)
+*Java模拟HTTP请求
+**/
+
+
+
+
+
+
+
+
+SpringMVC框架技术支持的 >文件上传 
+1.SpringMVC支持文件上传的配置项
+
+ <!-- 另外最好还要加入DefaultAnnotationHandlerMapping，不然会被 XML或其它的映射覆盖！ -->  
+    <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" /> 
+	<!-- SpringMVC上传文件属性设置 -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">  
+        <property name="defaultEncoding" value="utf-8"></property>   
+        <property name="maxUploadSize" value="10485760000"></property>  
+        <property name="maxInMemorySize" value="40960"></property>
+   </bean>
+   
+ 文件提交表单
+ 	<form method="post"  action="user/file"  enctype="multipart/form-data" >
+    <input type="file" name="myfile" >
+    <input type="submit" />
+    </form>
+   
+   接受文件的参数 
+  	@RequestParam(value="myfile",required=false) CommonsMultipartFile myfile
+   
